@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://getmcpm.dev/mcp-guardbench/case.schema.json",
+  "title": "mcp-guardbench case",
+  "description": "A single MCP JSON-RPC frame with an expected guard verdict.",
+  "type": "object",
+  "required": ["id", "bucket", "expected", "message"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "description": "stable unique id (also the filename stem)" },
+    "bucket": { "enum": ["attacks", "benign", "warn"], "description": "attacks/warn must be flagged; benign must pass" },
+    "name": { "type": ["string", "null"], "description": "human-readable case name" },
+    "category": { "type": ["string", "null"], "description": "attack taxonomy, e.g. OWASP-MCP-1 (null for benign)" },
+    "expected": {
+      "type": "object",
+      "required": ["action"],
+      "additionalProperties": false,
+      "properties": {
+        "action": { "enum": ["pass", "warn", "block"] },
+        "signature_id": { "type": "string", "description": "optional — a guard MAY report a differently-named signature and still be correct" }
+      }
+    },
+    "source": { "type": ["string", "null"], "description": "provenance / attack methodology citation" },
+    "message": { "type": "object", "description": "the JSON-RPC message fed to the guard" }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "mcp-guardbench",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Guard-agnostic benchmark for MCP injection/exfil/tool-poisoning detection (working title)",
+  "scripts": {
+    "bench:mcpm": "node runner/run.mjs --adapter \"node adapters/mcpm/adapter.mjs\" --name mcpm",
+    "extract": "node scripts/extract-from-mcpm.mjs"
+  },
+  "license": "MIT"
+}

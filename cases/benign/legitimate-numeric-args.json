@@ -1,0 +1,23 @@
+{
+  "id": "legitimate-numeric-args",
+  "bucket": "benign",
+  "name": "Tool call with numeric / structured non-string args",
+  "category": null,
+  "expected": {
+    "action": "pass"
+  },
+  "source": "Verifies non-string leaves don't false-positive. The walk only inspects string leaves.",
+  "message": {
+    "jsonrpc": "2.0",
+    "id": 106,
+    "method": "tools/call",
+    "params": {
+      "name": "calculate",
+      "arguments": {
+        "a": 42,
+        "b": 3.14,
+        "operation": "add"
+      }
+    }
+  }
+}

@@ -1,0 +1,204 @@
+{
+  "generatedFrom": "@getmcpm/cli guard fixture corpus",
+  "count": 33,
+  "cases": [
+    {
+      "id": "owasp-mcp-1-ansi-in-description",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-1",
+      "expected": "warn"
+    },
+    {
+      "id": "owasp-mcp-1-bidi-in-description",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-1",
+      "expected": "warn"
+    },
+    {
+      "id": "owasp-mcp-1-description-injection",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-1",
+      "expected": "block"
+    },
+    {
+      "id": "owasp-mcp-1-initialize-instructions-injection",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-1",
+      "expected": "block"
+    },
+    {
+      "id": "owasp-mcp-1-multitool-poisoning",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-1",
+      "expected": "block"
+    },
+    {
+      "id": "owasp-mcp-1-system-tag",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-1",
+      "expected": "block"
+    },
+    {
+      "id": "owasp-mcp-1-when-user-asks-poisoning",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-1",
+      "expected": "block"
+    },
+    {
+      "id": "owasp-mcp-1-zwsp-in-description",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-1",
+      "expected": "warn"
+    },
+    {
+      "id": "owasp-mcp-2-classic-injection",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-2",
+      "expected": "block"
+    },
+    {
+      "id": "owasp-mcp-2-cyrillic-homoglyph",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-2",
+      "expected": "block"
+    },
+    {
+      "id": "owasp-mcp-2-developer-mode",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-2",
+      "expected": "block"
+    },
+    {
+      "id": "owasp-mcp-2-disregard-variant",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-2",
+      "expected": "block"
+    },
+    {
+      "id": "owasp-mcp-2-forget-variant",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-2",
+      "expected": "block"
+    },
+    {
+      "id": "owasp-mcp-2-newline-split",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-2",
+      "expected": "block"
+    },
+    {
+      "id": "owasp-mcp-2-nfkc-fullwidth",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-2",
+      "expected": "block"
+    },
+    {
+      "id": "owasp-mcp-2-zwsp-evasion",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-2",
+      "expected": "block"
+    },
+    {
+      "id": "owasp-mcp-7-aws-credentials",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-7",
+      "expected": "warn"
+    },
+    {
+      "id": "owasp-mcp-7-env-file-exfil",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-7",
+      "expected": "warn"
+    },
+    {
+      "id": "owasp-mcp-7-ssh-key-exfil",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-7",
+      "expected": "warn"
+    },
+    {
+      "id": "cyrillic-prose",
+      "bucket": "benign",
+      "category": null,
+      "expected": "pass"
+    },
+    {
+      "id": "emoji-cjk-description",
+      "bucket": "benign",
+      "category": null,
+      "expected": "pass"
+    },
+    {
+      "id": "ignore-flag-docs",
+      "bucket": "benign",
+      "category": null,
+      "expected": "pass"
+    },
+    {
+      "id": "large-benign-response",
+      "bucket": "benign",
+      "category": null,
+      "expected": "pass"
+    },
+    {
+      "id": "legitimate-file-read",
+      "bucket": "benign",
+      "category": null,
+      "expected": "pass"
+    },
+    {
+      "id": "legitimate-initialize",
+      "bucket": "benign",
+      "category": null,
+      "expected": "pass"
+    },
+    {
+      "id": "legitimate-numeric-args",
+      "bucket": "benign",
+      "category": null,
+      "expected": "pass"
+    },
+    {
+      "id": "legitimate-resource-read",
+      "bucket": "benign",
+      "category": null,
+      "expected": "pass"
+    },
+    {
+      "id": "legitimate-slack-thread",
+      "bucket": "benign",
+      "category": null,
+      "expected": "pass"
+    },
+    {
+      "id": "legitimate-tools-list",
+      "bucket": "benign",
+      "category": null,
+      "expected": "pass"
+    },
+    {
+      "id": "when-user-asks-legitimate-description",
+      "bucket": "benign",
+      "category": null,
+      "expected": "pass"
+    },
+    {
+      "id": "owasp-mcp-2-prompt-content-injection",
+      "bucket": "warn",
+      "category": "OWASP-MCP-2",
+      "expected": "warn"
+    },
+    {
+      "id": "owasp-mcp-2-resource-content-injection",
+      "bucket": "warn",
+      "category": "OWASP-MCP-2",
+      "expected": "warn"
+    },
+    {
+      "id": "owasp-mcp-2-resource-documents-injection",
+      "bucket": "warn",
+      "category": "OWASP-MCP-2",
+      "expected": "warn"
+    }
+  ]
+}

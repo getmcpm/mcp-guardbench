@@ -1,7 +1,19 @@
 {
   "generatedFrom": "@getmcpm/cli guard fixture corpus",
-  "count": 33,
+  "count": 38,
   "cases": [
+    {
+      "id": "credential-egress-github-pat",
+      "bucket": "attacks",
+      "category": "MCP-CREDENTIAL-EXFIL",
+      "expected": "warn"
+    },
+    {
+      "id": "credential-egress-private-key",
+      "bucket": "attacks",
+      "category": "MCP-CREDENTIAL-EXFIL",
+      "expected": "warn"
+    },
     {
       "id": "owasp-mcp-1-ansi-in-description",
       "bucket": "attacks",
@@ -115,6 +127,24 @@
       "bucket": "attacks",
       "category": "OWASP-MCP-7",
       "expected": "warn"
+    },
+    {
+      "id": "credential-egress-aws-example-key",
+      "bucket": "benign",
+      "category": null,
+      "expected": "pass"
+    },
+    {
+      "id": "credential-egress-prose",
+      "bucket": "benign",
+      "category": null,
+      "expected": "pass"
+    },
+    {
+      "id": "credential-egress-uuid",
+      "bucket": "benign",
+      "category": null,
+      "expected": "pass"
     },
     {
       "id": "cyrillic-prose",

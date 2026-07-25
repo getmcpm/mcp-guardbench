@@ -17,7 +17,7 @@
  */
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
-import { readFileSync, readdirSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -125,8 +125,13 @@ const board = {
   elapsedMs: Date.now() - t0,
 };
 
+// `out/` is gitignored, so it does not exist in a fresh clone — create it rather
+// than crashing on the first run (which is every new contributor and every CI job).
+const OUT = path.join(ROOT, "out");
+mkdirSync(OUT, { recursive: true });
+
 const stamp = new Date().toISOString().slice(0, 10);
-const jsonPath = path.join(ROOT, "out", `scoreboard-${adapterName}-${stamp}.json`);
+const jsonPath = path.join(OUT, `scoreboard-${adapterName}-${stamp}.json`);
 writeFileSync(jsonPath, JSON.stringify(board, null, 2) + "\n");
 
 // ---- markdown scoreboard --------------------------------------------------
@@ -154,7 +159,7 @@ const md = [
   ...(misses.length ? [`## Misses (${misses.length})`, ``, ...misses.map((x) => `- \`${x.id}\` — ${x.reason}`)] : [`_No misses._`]),
   ``,
 ].join("\n");
-const mdPath = path.join(ROOT, "out", `scoreboard-${adapterName}-${stamp}.md`);
+const mdPath = path.join(OUT, `scoreboard-${adapterName}-${stamp}.md`);
 writeFileSync(mdPath, md);
 
 // ---- console --------------------------------------------------------------

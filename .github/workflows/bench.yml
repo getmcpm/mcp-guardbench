@@ -45,11 +45,14 @@ jobs:
 
       - name: Show scoreboard
         if: always()
-        run: cat out/scoreboard-mcpm-latest-*.md >> "$GITHUB_STEP_SUMMARY"
+        # Tolerant: if the scoring step crashed there is no scoreboard, and its
+        # error should stay the visible failure rather than being masked by a
+        # confusing `cat: No such file` on top of it.
+        run: cat out/scoreboard-mcpm-latest-*.md >> "$GITHUB_STEP_SUMMARY" || echo "no scoreboard produced" >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: scoreboard
           path: out/
-          if-no-files-found: error
+          if-no-files-found: warn

@@ -36,21 +36,34 @@ node runner/run.mjs --adapter "<your command>" --name <label>
 
 ## Reference adapter (mcpm)
 
-`adapters/mcpm/adapter.mjs` imports mcpm's inspection engine from a bundled
-`engine.mjs` (a build of `@getmcpm/cli`'s `src/guard/{patterns,signatures}`).
-It scores 100% on this corpus **by construction** — the corpus was extracted
-from mcpm's own CI fixtures, so a perfect reference score is expected and is not
-itself a claim of superiority. The benchmark earns its keep when (a) other
-guards are scored on the same cases and (b) the corpus grows with cases mcpm
-does **not** catch.
+`adapters/mcpm/adapter.mjs` shells out to `mcpm guard inspect --json` — mcpm's
+own **published CLI**, the same binary its users run. It does not import mcpm's
+engine. That rule is what makes the scoreboard comparable: no guard, including
+the one that authored this corpus, gets a privileged in-process path.
+
+```bash
+# whatever `mcpm` is on PATH
+npm run bench:mcpm
+
+# a pinned published version (recommended for a citable run)
+MCPM_CMD="npx --yes @getmcpm/cli@0.25.0 guard inspect --json" \
+  node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.25.0
+```
+
+mcpm scores 100% on this corpus **by construction** — the corpus was extracted
+from mcpm's own CI fixtures, so a perfect reference score is expected and is
+*not* a claim of superiority. The benchmark earns its keep when (a) other guards
+are scored on the same cases and (b) the corpus grows with cases mcpm does
+**not** catch. Treat 100% as the sanity check that the adapter is wired up, not
+as a result.
 
 ## Publishing an adapter
 
-For a published adapter, prefer depending on the guard's real distributed
-artifact over vendoring internals:
+Depend on the guard's real distributed artifact — never vendor its internals. A
+bundled copy of a guard's engine drifts silently from what ships, and an
+in-process import gives that guard a path no competitor can have; both quietly
+invalidate the comparison. Shell out to the guard's own CLI (or its public
+library API) and keep the adapter thin — its only job is NDJSON translation.
 
-- **mcpm**: replace `engine.mjs` with a call to a public one-frame inspect API
-  on the installed `@getmcpm/cli` (a `mcpm guard inspect` subcommand is the
-  clean seam; it does not exist yet — tracked as benchmark-publication work).
-- **other guards**: shell out to the guard's own CLI/library. Keep the adapter
-  thin — its only job is the NDJSON translation.
+Pin the version you scored and put it in `--name`, so a scoreboard stays
+reproducible after the guard moves on.

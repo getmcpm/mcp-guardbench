@@ -163,4 +163,21 @@ console.log(`recall ${pct(m.recall)}  fp-rate ${pct(m.fp_rate)}  precision ${pct
 console.log(`confusion: TP ${TP} FN ${FN} FP ${FP} TN ${TN}  (scored ${scored}/${cases.length})`);
 if (misses.length) console.log(`misses: ${misses.length}`);
 console.log(`\n${mdPath}`);
+
+// ---- exit status ----------------------------------------------------------
+// Non-zero on INCOMPLETE COVERAGE only — a case that got no verdict or an
+// adapter error means the harness is broken, and a partial scoreboard read as a
+// full one is the failure mode that quietly overstates a guard.
+//
+// Deliberately NOT gated on the score. A new case that the guard under test
+// misses is the benchmark working as intended (that is how the corpus grows);
+// failing CI for it would create pressure to only add cases that already pass.
+if (missingVerdict > 0 || adapterErrors > 0) {
+  console.error(
+    `\nincomplete coverage: ${missingVerdict} case(s) with no verdict, ${adapterErrors} adapter error(s) — ` +
+      `scoreboard covers ${scored}/${cases.length}`,
+  );
+  process.exitCode = 1;
+}
+
 function pct(x) { return x === null ? "—" : (x * 100).toFixed(1) + "%"; }

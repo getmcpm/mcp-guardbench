@@ -1,8 +1,4 @@
-<!-- NAME IS A WORKING TITLE. "MCPTox" is already a published benchmark; this
-     repo needs its own name before any public release. Candidates: mcp-guardbench,
-     guardbench, mcp-redteam-corpus. Decide before publishing. -->
-
-# mcp-guardbench *(working title — see note below)*
+# mcp-guardbench
 
 **A guard-agnostic benchmark for MCP injection / exfil / tool-poisoning detection.**
 
@@ -12,11 +8,18 @@ client-side inspector through a simple stdio contract. mcpm ships as the
 reference implementation; the point is that anyone can write an adapter and
 compare.
 
-> **Status: pre-publication draft.** Local only. Not yet on GitHub, not yet
-> named. Built as the "give away the measuring stick" spoke of the mcpm trust
-> flywheel (see `@getmcpm/cli` `docs/VISION.md`). A benchmark only builds trust
-> if others can run it and beat you on it — so it lives outside the mcpm repo
-> and treats mcpm as one subject among many.
+> **Conflict of interest, stated up front.** This corpus was extracted from
+> [`@getmcpm/cli`](https://github.com/getmcpm/cli)'s guard fixtures, and it is
+> published by the same people. So mcpm scores 100% here **by construction** —
+> the corpus is its own test suite. That is a baseline, not a result, and it is
+> not evidence mcpm is better than anything.
+>
+> The benchmark is only worth something if others can run it and beat us on it.
+> Two rules keep that honest: every guard is scored through **its own published
+> CLI** (no in-process imports, mcpm included — see
+> [`adapters/README.md`](adapters/README.md)), and CI never fails on a low
+> score, only on incomplete coverage — so adding a case mcpm misses is a
+> welcome contribution, not a broken build.
 
 ## Why
 
@@ -29,19 +32,41 @@ stick: versioned cases, an open schema, a language-agnostic runner, a scoreboard
 ## Quickstart
 
 ```bash
-# score the reference guard (mcpm)
-node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm
-# → out/scoreboard-mcpm-<date>.md
+# score the reference guard through a pinned published mcpm (no install needed)
+MCPM_CMD="npx --yes @getmcpm/cli@0.25.0 guard inspect --json" \
+  node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.25.0
+# → out/scoreboard-mcpm@0.25.0-<date>.md
+
+# or whatever `mcpm` is already on your PATH
+npm run bench:mcpm
 
 # score your own guard — implement the stdio contract in any language
 node runner/run.mjs --adapter "python my_guard_adapter.py" --name myguard
 ```
 
+Node 22+. No dependencies. The runner exits non-zero only on **incomplete
+coverage** (a case that got no verdict, or an adapter error) — never on a low
+score.
+
+### Current baseline
+
+| guard | recall | fp-rate | precision | exact-action | coverage |
+|---|---|---|---|---|---|
+| `@getmcpm/cli@0.25.0` | 100.0% | 0.0% | 100.0% | 100.0% | 38/38 |
+
+Measured through `npx @getmcpm/cli@0.25.0 guard inspect --json`. Again: 100% is
+**by construction** (see the note at the top) — it is here so you can check your
+adapter is wired up correctly, and so the number has a name and a version
+attached instead of being a vendor claim.
+
+This table has exactly one guard in it. That is the honest state of the field
+right now, and the most useful contribution is a second row.
+
 See [`adapters/README.md`](adapters/README.md) for the adapter contract.
 
 ## Corpus
 
-33 single-frame cases today (19 attack, 11 benign, 3 warn-and-forward), each in
+38 single-frame cases today (21 attack, 14 benign, 3 warn-and-forward), each in
 [`schema/case.schema.json`](schema/case.schema.json):
 
 | bucket | must | maps to |
@@ -62,16 +87,39 @@ pin) need a stateful adapter contract; the single-frame v1 contract omits them.
 
 `recall` = attacks detected · `fp_rate` = benign wrongly flagged · `precision`
 = detections that were real attacks · `exact_action_accuracy` = also matches
-`block` vs `warn`. The reference guard scores 100% across the board **by
-construction** (the corpus is its own test suite); that is a baseline, not a
-boast. Real signal comes from scoring *other* guards and from adding cases the
-reference guard misses.
+`block` vs `warn`.
+
+Every scoreboard also reports `coverage` — how many cases actually got a verdict.
+**Read that first.** A partial run misread as a full one is the failure mode that
+quietly overstates a guard, which is why incomplete coverage is the one thing
+that fails CI.
+
+The reference guard scores 100% across the board **by construction** (the corpus
+is its own test suite); that is a baseline, not a boast. Real signal comes from
+scoring *other* guards and from adding cases the reference guard misses.
 
 ## ⚠ Handling
 
 `cases/attacks/` contains live prompt-injection payloads. Do not paste them into
 prompts or AI-assistant contexts, and keep the directory out of any passive
 file-ingestion scope.
+
+## Contributing
+
+Two contributions matter most:
+
+1. **An adapter for another guard.** Implement the stdio contract in any
+   language — see [`adapters/README.md`](adapters/README.md). The only rule is
+   that it must drive the guard's own published artifact (CLI or public library
+   API), never a vendored copy of its internals.
+2. **A case the reference guard misses.** That is the point of the exercise, and
+   CI will not fail for it. Include a `source` field citing the public
+   methodology or writeup the case comes from — every case has to be traceable
+   to a real technique, not invented to pad a score.
+
+Cases follow [`schema/case.schema.json`](schema/case.schema.json). Keep them
+single-frame for now; stateful (rug-pull / schema-drift) scenarios need a
+stateful adapter contract and are deferred to v2.
 
 ## License
 

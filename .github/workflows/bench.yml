@@ -1,0 +1,55 @@
+name: bench
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Weekly. Scores the LATEST published mcpm, so a future release that breaks
+    # the `guard inspect` contract (or regresses detection) surfaces here rather
+    # than the next time somebody runs the benchmark by hand.
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  score-mcpm:
+    runs-on: ubuntu-latest
+    steps:
+      # Actions are SHA-pinned (OpenSSF Scorecard "pinned dependencies"). A
+      # benchmark that asks other projects to trust its numbers has to hold
+      # itself to the supply-chain hygiene it measures.
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+
+      # Scored through the PUBLISHED CLI, exactly as any third-party guard would
+      # be — never by importing mcpm's engine. See adapters/README.md.
+      #
+      # `@latest` is deliberately UNpinned here: the published guard is the thing
+      # under test, and pinning it would hide exactly the regression this weekly
+      # run exists to catch. Pin the version when producing a citable scoreboard.
+      #
+      # The runner fails ONLY on incomplete coverage (a case with no verdict, or
+      # an adapter error). It deliberately does NOT fail on a low score: a new
+      # case that the guard under test misses is the corpus growing, and failing
+      # CI for it would create pressure to only add cases that already pass.
+      - name: Score latest published @getmcpm/cli
+        env:
+          MCPM_CMD: npx --yes @getmcpm/cli@latest guard inspect --json
+        run: node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm-latest
+
+      - name: Show scoreboard
+        if: always()
+        run: cat out/scoreboard-mcpm-latest-*.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: scoreboard
+          path: out/
+          if-no-files-found: error

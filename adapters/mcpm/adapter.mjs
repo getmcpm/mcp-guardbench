@@ -49,25 +49,41 @@ for await (const line of createInterface({ input: process.stdin, crlfDelay: Infi
 const child = spawn(bin, args, { stdio: ["pipe", "pipe", "inherit"] });
 
 let spawnFailed = false;
+// A child that exits without draining stdin (wrong binary, unsupported
+// subcommand) makes child.stdin.write raise EPIPE. Unhandled, that killed the
+// adapter before the tail loop below could report the cases -- defeating this
+// file's own guarantee that a case with no verdict is REPORTED, not dropped.
+child.stdin.on("error", () => {});
 child.on("error", (err) => {
   spawnFailed = true;
   process.stderr.write(`adapter: cannot run "${CMD}": ${err.message}\n`);
 });
 
+const VALID_ACTIONS = new Set(["pass", "warn", "block", "error"]);
+const unexpectedLines = [];
 let i = 0;
 const rl = createInterface({ input: child.stdout, crlfDelay: Infinity });
 rl.on("line", (line) => {
   const trimmed = line.trim();
   if (trimmed === "") return;
-  const id = ids[i++];
-  if (id === undefined) return; // more verdicts than cases — ignore the tail
+  // Validate BEFORE consuming an id. Positional correlation means one stray
+  // stdout line (a banner, an update notice, a future summary object) would
+  // otherwise shift every following case by one and still report full coverage
+  // -- a silent, confidently-wrong scoreboard. An unrecognized line is counted
+  // as an anomaly instead, and the count check at the end fails the run.
   let verdict;
   try {
     verdict = JSON.parse(trimmed);
   } catch {
-    process.stdout.write(JSON.stringify({ id, action: "error", error: "unparseable verdict line" }) + "\n");
+    unexpectedLines.push(trimmed);
     return;
   }
+  if (verdict === null || typeof verdict !== "object" || !VALID_ACTIONS.has(verdict.action)) {
+    unexpectedLines.push(trimmed);
+    return;
+  }
+  const id = ids[i++];
+  if (id === undefined) return; // more verdicts than cases — ignore the tail
   const out = { id, action: verdict.action };
   // Informational only — the runner scores on action. mcpm reports every
   // finding; the first is the one the action derives from.
@@ -97,5 +113,17 @@ await new Promise((resolve) => {
 const reason = spawnFailed ? `could not run "${CMD}"` : "no verdict emitted";
 for (; i < ids.length; i++) {
   process.stdout.write(JSON.stringify({ id: ids[i], action: "error", error: reason }) + "\n");
+}
+
+// Anything the guard wrote to stdout that was not a verdict means the framing
+// assumption behind positional correlation did not hold. Say so loudly rather
+// than letting a possibly-shifted pairing be scored as data.
+if (unexpectedLines.length > 0) {
+  process.stderr.write(
+    `adapter: ${unexpectedLines.length} unexpected stdout line(s) from "${CMD}" — ` +
+      `positional correlation is unsafe, results for this run are not trustworthy.\n` +
+      unexpectedLines.slice(0, 3).map((l) => `  ${l.slice(0, 120)}\n`).join(""),
+  );
+  process.exitCode = 1;
 }
 if (spawnFailed) process.exitCode = 1;

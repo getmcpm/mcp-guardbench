@@ -52,36 +52,81 @@ function loadCases() {
 const cases = loadCases();
 const byId = new Map(cases.map((c) => [c.id, c]));
 
+const VALID_ACTIONS = new Set(["pass", "warn", "block", "error"]);
+const truncate = (s) => (s.length > 120 ? `${s.slice(0, 120)}...` : s);
+
 // ---- run adapter ----------------------------------------------------------
 async function runAdapter(cmd, cases) {
   const [bin, ...args] = cmd.split(" ");
   const child = spawn(bin, args, { cwd: ROOT, stdio: ["pipe", "pipe", "inherit"] });
   const verdicts = new Map();
+  // Anomalies are reported, never swallowed. A scoreboard that silently drops
+  // what it did not understand is exactly the confidently-wrong artifact this
+  // benchmark exists to replace.
+  const anomalies = [];
   const rl = createInterface({ input: child.stdout, crlfDelay: Infinity });
   const done = new Promise((resolve, reject) => {
     rl.on("line", (line) => {
       const t = line.trim();
       if (!t) return;
+      let v;
       try {
-        const v = JSON.parse(t);
-        if (v.id) verdicts.set(v.id, v);
-      } catch { /* ignore non-JSON adapter chatter */ }
+        v = JSON.parse(t);
+      } catch {
+        anomalies.push(`non-JSON line on adapter stdout: ${truncate(t)}`);
+        return;
+      }
+      if (v === null || typeof v !== "object" || Array.isArray(v)) {
+        anomalies.push(`verdict is not an object: ${truncate(t)}`);
+        return;
+      }
+      if (typeof v.id !== "string" || v.id === "") {
+        anomalies.push(`verdict has no id: ${truncate(t)}`);
+        return;
+      }
+      // An action outside the enum must NOT be scored. Treating an unknown or
+      // missing action as falsy (and therefore "pass") let a structurally empty
+      // verdict -- or a third-party adapter emitting "deny"/"BLOCK" -- report a
+      // flawless 0% false-positive rate with full coverage.
+      if (!VALID_ACTIONS.has(v.action)) {
+        anomalies.push(`case ${v.id}: invalid action ${JSON.stringify(v.action)}`);
+        verdicts.set(v.id, { id: v.id, action: "error", error: `invalid action ${JSON.stringify(v.action)}` });
+        return;
+      }
+      if (verdicts.has(v.id)) anomalies.push(`duplicate verdict for case ${v.id} (last one wins)`);
+      verdicts.set(v.id, v);
     });
     child.on("error", reject);
-    child.on("close", () => resolve());
+    // An adapter signals its own trouble with a non-zero exit (the reference
+    // adapter does this when the guard writes stdout it could not classify, so
+    // positional correlation may have shifted). Surfacing it is what keeps the
+    // adapter's judgement from being silently overruled by a clean scoreboard.
+    child.on("close", (code) => {
+      if (code !== 0 && code !== null) {
+        anomalies.push(`adapter exited ${code} — it reported the run as untrustworthy`);
+      }
+      resolve();
+    });
   });
   for (const c of cases) child.stdin.write(JSON.stringify({ id: c.id, message: c.message }) + "\n");
   child.stdin.end();
   await done;
-  return verdicts;
+  return { verdicts, anomalies };
 }
 
 const t0 = Date.now();
-const verdicts = await runAdapter(adapterCmd, cases);
+const { verdicts, anomalies } = await runAdapter(adapterCmd, cases);
 
 // ---- score ----------------------------------------------------------------
+// Verdicts for ids that are not in the corpus mean the adapter and the runner
+// disagree about what was sent -- a desync that leaves the id count intact and
+// would otherwise be invisible. (`byId` existed for this check and went unused.)
+for (const id of verdicts.keys()) {
+  if (!byId.has(id)) anomalies.push(`verdict for unknown case id ${JSON.stringify(id)}`);
+}
+
 const isAttack = (c) => c.expected.action !== "pass"; // attacks + warn
-let TP = 0, FN = 0, FP = 0, TN = 0, exact = 0, missingVerdict = 0, adapterErrors = 0;
+let TP = 0, FN = 0, FP = 0, TN = 0, exact = 0, missingVerdict = 0, adapterErrors = 0, overBlocked = 0;
 const misses = [];
 const catAgg = {}; // category -> {n, detected}
 
@@ -96,7 +141,18 @@ for (const c of cases) {
     const cat = c.category ?? "uncategorized";
     catAgg[cat] ??= { n: 0, detected: 0 };
     catAgg[cat].n++;
-    if (nonPass) { TP++; catAgg[cat].detected++; }
+    if (nonPass) {
+      TP++; catAgg[cat].detected++;
+      // README: `warn/` cases must warn, never block -- blocking would corrupt
+      // the document the user asked to read. Detection is still credited (the
+      // guard did see it), but the contract violation is named, otherwise a
+      // guard that simply blocks everything passes forward-with-warning
+      // invisibly and the only trace is a diluted exact-action number.
+      if (c.expected.action === "warn" && v.action === "block") {
+        overBlocked++;
+        misses.push({ id: c.id, reason: "over-blocked a warn-and-forward case (expected warn, got block)" });
+      }
+    }
     else { FN++; misses.push({ id: c.id, reason: `missed attack (expected ${c.expected.action}, got pass)` }); }
   } else {
     if (nonPass) { FP++; misses.push({ id: c.id, reason: `false positive on benign (got ${v.action})` }); }
@@ -109,8 +165,18 @@ const div = (a, b) => (b === 0 ? null : +(a / b).toFixed(4));
 const board = {
   adapter: adapterName,
   ranAt: new Date().toISOString(),
-  corpus: { total: cases.length, attacks: cases.filter(isAttack).length, benign: cases.filter((c) => !isAttack(c)).length },
-  coverage: { scored, missingVerdict, adapterErrors },
+  corpus: {
+    total: cases.length,
+    // `attacks` = expected-detection (attacks/ + warn/); the bucket split is
+    // reported alongside so this never disagrees with the README's counts.
+    attacks: cases.filter(isAttack).length,
+    attackBucket: cases.filter((c) => c.bucket === "attacks").length,
+    warnBucket: cases.filter((c) => c.bucket === "warn").length,
+    benign: cases.filter((c) => !isAttack(c)).length,
+  },
+  coverage: { scored, missingVerdict, adapterErrors, complete: scored === cases.length },
+  contractViolations: { overBlockedWarnCases: overBlocked },
+  anomalies,
   metrics: {
     recall: div(TP, TP + FN),
     fp_rate: div(FP, FP + TN),
@@ -136,10 +202,28 @@ writeFileSync(jsonPath, JSON.stringify(board, null, 2) + "\n");
 
 // ---- markdown scoreboard --------------------------------------------------
 const m = board.metrics;
+const partial = scored !== cases.length;
 const md = [
   `# Scoreboard — ${adapterName}`,
   ``,
-  `Corpus: ${board.corpus.total} cases (${board.corpus.attacks} attack, ${board.corpus.benign} benign). Scored ${scored}.`,
+  // A partial run's metrics are computed over ONLY the cases that answered, so
+  // an adapter that drops the cases it would fail otherwise reports a clean
+  // 100% here. This banner is what stops that number being quoted as a result.
+  ...(partial
+    ? [
+        `> **⚠ PARTIAL RUN — metrics below are NOT comparable.** Only ${scored} of ${cases.length} cases produced a verdict`,
+        `> (${missingVerdict} missing, ${adapterErrors} adapter error(s)). Every rate is computed over the ${scored} that answered,`,
+        `> so dropped cases silently inflate them. Fix the adapter before quoting anything here.`,
+        ``,
+      ]
+    : []),
+  ...(anomalies.length
+    ? [`> **⚠ ${anomalies.length} adapter anomal${anomalies.length === 1 ? "y" : "ies"}** — see the Anomalies section below.`, ``]
+    : []),
+  // "attack" here means "expected to be detected" = the attacks/ bucket PLUS the
+  // warn/ bucket. Spelled out because the README counts the buckets separately
+  // (21 attack / 3 warn) and two different corpus descriptions is a trap.
+  `Corpus: ${board.corpus.total} cases — ${board.corpus.attacks} expected-detection (${board.corpus.attackBucket} \`attacks/\` + ${board.corpus.warnBucket} \`warn/\`), ${board.corpus.benign} benign. Scored ${scored}${partial ? ` of ${cases.length}` : ""}.`,
   ``,
   `| metric | value |`,
   `|---|---|`,
@@ -158,6 +242,9 @@ const md = [
   ``,
   ...(misses.length ? [`## Misses (${misses.length})`, ``, ...misses.map((x) => `- \`${x.id}\` — ${x.reason}`)] : [`_No misses._`]),
   ``,
+  ...(anomalies.length
+    ? [`## Anomalies (${anomalies.length})`, ``, `Adapter output the runner could not use as scored data:`, ``, ...anomalies.map((a) => `- ${a}`), ``]
+    : []),
 ].join("\n");
 const mdPath = path.join(OUT, `scoreboard-${adapterName}-${stamp}.md`);
 writeFileSync(mdPath, md);
@@ -167,6 +254,7 @@ console.log(`\n─── ${adapterName} ───`);
 console.log(`recall ${pct(m.recall)}  fp-rate ${pct(m.fp_rate)}  precision ${pct(m.precision)}  exact ${pct(m.exact_action_accuracy)}`);
 console.log(`confusion: TP ${TP} FN ${FN} FP ${FP} TN ${TN}  (scored ${scored}/${cases.length})`);
 if (misses.length) console.log(`misses: ${misses.length}`);
+if (anomalies.length) console.log(`anomalies: ${anomalies.length} (see scoreboard)`);
 console.log(`\n${mdPath}`);
 
 // ---- exit status ----------------------------------------------------------
@@ -177,11 +265,13 @@ console.log(`\n${mdPath}`);
 // Deliberately NOT gated on the score. A new case that the guard under test
 // misses is the benchmark working as intended (that is how the corpus grows);
 // failing CI for it would create pressure to only add cases that already pass.
-if (missingVerdict > 0 || adapterErrors > 0) {
+if (missingVerdict > 0 || adapterErrors > 0 || anomalies.length > 0) {
   console.error(
-    `\nincomplete coverage: ${missingVerdict} case(s) with no verdict, ${adapterErrors} adapter error(s) — ` +
-      `scoreboard covers ${scored}/${cases.length}`,
+    `\nunhealthy run: ${missingVerdict} case(s) with no verdict, ${adapterErrors} adapter error(s), ` +
+      `${anomalies.length} anomal${anomalies.length === 1 ? "y" : "ies"} — scoreboard covers ${scored}/${cases.length}`,
   );
+  for (const a of anomalies.slice(0, 5)) console.error(`  - ${a}`);
+  if (anomalies.length > 5) console.error(`  ... and ${anomalies.length - 5} more`);
   process.exitCode = 1;
 }
 

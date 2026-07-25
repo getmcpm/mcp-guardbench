@@ -15,11 +15,12 @@ compare.
 > not evidence mcpm is better than anything.
 >
 > The benchmark is only worth something if others can run it and beat us on it.
-> Two rules keep that honest: every guard is scored through **its own published
-> CLI** (no in-process imports, mcpm included — see
-> [`adapters/README.md`](adapters/README.md)), and CI never fails on a low
-> score, only on incomplete coverage — so adding a case mcpm misses is a
-> welcome contribution, not a broken build.
+> Two rules keep that honest: every guard is scored through **the artifact its
+> own users run** — its published CLI, or its published library API — never
+> through a vendored copy of its internals (see
+> [`adapters/README.md`](adapters/README.md)); and CI never fails on a low
+> score, only on an unhealthy run — so adding a case mcpm misses is a welcome
+> contribution, not a broken build.
 
 ## Why
 
@@ -44,9 +45,15 @@ npm run bench:mcpm
 node runner/run.mjs --adapter "python my_guard_adapter.py" --name myguard
 ```
 
-Node 22+. No dependencies. The runner exits non-zero only on **incomplete
-coverage** (a case that got no verdict, or an adapter error) — never on a low
-score.
+**Requires Node 22.9+** (that is `@getmcpm/cli`'s own floor, not the runner's —
+the runner itself needs nothing newer than Node 16) and **`@getmcpm/cli` 0.25.0
+or later**, which is where `guard inspect` was added. An older `mcpm` on your
+PATH fails with `unknown command 'guard'`, which surfaces as 38 adapter errors
+rather than as a version message. No dependencies.
+
+The runner exits non-zero only on an **unhealthy run** — a case that got no
+verdict, an adapter error, or adapter output it could not classify. **Never on a
+low score.**
 
 ### Current baseline
 
@@ -78,7 +85,11 @@ See [`adapters/README.md`](adapters/README.md) for the adapter contract.
 Provenance: extracted from `@getmcpm/cli`'s hand-authored guard fixtures, which
 derive from **public** attack methodology (Invariant Labs 2025, MCPoison
 CVE-2025-54136, Equixly/Pillar audits). License-clean — no MCPTox artifacts
-copied. Regenerate/extend with `node scripts/extract-from-mcpm.mjs`.
+copied. Regenerate/extend with `node scripts/extract-from-mcpm.mjs <path-to-getmcpm/cli>`
+— it reads the upstream fixtures, so it needs a checkout of
+[getmcpm/cli](https://github.com/getmcpm/cli) (it defaults to a sibling `../cli`
+directory). The generated cases are committed, so this is only needed when the
+upstream corpus grows; cloning this repo alone is enough to *run* the benchmark.
 
 **Deferred to v2:** stateful schema-drift / rug-pull scenarios (two frames + a
 pin) need a stateful adapter contract; the single-frame v1 contract omits them.
@@ -89,10 +100,17 @@ pin) need a stateful adapter contract; the single-frame v1 contract omits them.
 = detections that were real attacks · `exact_action_accuracy` = also matches
 `block` vs `warn`.
 
-Every scoreboard also reports `coverage` — how many cases actually got a verdict.
-**Read that first.** A partial run misread as a full one is the failure mode that
-quietly overstates a guard, which is why incomplete coverage is the one thing
-that fails CI.
+Every scoreboard also reports `coverage` — how many cases actually got a verdict
+— and a **partial run is banner-marked at the top of the markdown**. Read that
+first. Every rate is computed over only the cases that answered, so an adapter
+that drops the cases it would fail otherwise reports a clean 100%; that is the
+failure mode that quietly overstates a guard, and it is why an unhealthy run is
+the one thing that fails CI.
+
+A note on two different counts of the same corpus: the scoreboard's
+"expected-detection" figure is **24** — the 21 `attacks/` cases *plus* the 3
+`warn/` cases, since both must be flagged. The bucket split is printed alongside
+it so the two never appear to disagree.
 
 The reference guard scores 100% across the board **by construction** (the corpus
 is its own test suite); that is a baseline, not a boast. Real signal comes from

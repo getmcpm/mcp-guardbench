@@ -59,8 +59,8 @@ the one that authored this corpus, gets a privileged in-process path.
 npm run bench:mcpm
 
 # a pinned published version (recommended for a citable run)
-MCPM_CMD="npx --yes @getmcpm/cli@0.26.2 guard inspect --json" \
-  node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.26.2
+MCPM_CMD="npx --yes @getmcpm/cli@0.26.3 guard inspect --json" \
+  node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.26.3
 ```
 
 mcpm scores 100% on this corpus **by construction** — the corpus was extracted

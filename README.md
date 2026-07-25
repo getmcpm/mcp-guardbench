@@ -34,9 +34,9 @@ stick: versioned cases, an open schema, a language-agnostic runner, a scoreboard
 
 ```bash
 # score the reference guard through a pinned published mcpm (no install needed)
-MCPM_CMD="npx --yes @getmcpm/cli@0.26.2 guard inspect --json" \
-  node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.26.2
-# → out/scoreboard-mcpm@0.26.2-<date>.md
+MCPM_CMD="npx --yes @getmcpm/cli@0.26.3 guard inspect --json" \
+  node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.26.3
+# → out/scoreboard-mcpm@0.26.3-<date>.md
 
 # or whatever `mcpm` is already on your PATH
 npm run bench:mcpm
@@ -59,9 +59,9 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage |
 |---|---|---|---|---|---|
-| `@getmcpm/cli@0.26.2` | 100.0% | 0.0% | 100.0% | 100.0% | 38/38 |
+| `@getmcpm/cli@0.26.3` | 100.0% | 0.0% | 100.0% | 100.0% | 38/38 |
 
-Measured through `npx @getmcpm/cli@0.26.2 guard inspect --json`. Again: 100% is
+Measured through `npx @getmcpm/cli@0.26.3 guard inspect --json`. Again: 100% is
 **by construction** (see the note at the top) — it is here so you can check your
 adapter is wired up correctly, and so the number has a name and a version
 attached instead of being a vendor claim.

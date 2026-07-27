@@ -10,9 +10,9 @@ compare.
 
 > **Conflict of interest, stated up front.** This corpus was extracted from
 > [`@getmcpm/cli`](https://github.com/getmcpm/cli)'s guard fixtures, and it is
-> published by the same people. So mcpm scores 100% here **by construction** —
-> the corpus is its own test suite. That is a baseline, not a result, and it is
-> not evidence mcpm is better than anything.
+> published by the same people. For its first 38 cases mcpm scored 100% **by
+> construction** — the corpus was its own test suite. That was a baseline, not a
+> result, and it was never evidence mcpm is better than anything.
 >
 > The benchmark is only worth something if others can run it and beat us on it.
 > Two rules keep that honest: every guard is scored through **the artifact its
@@ -21,6 +21,10 @@ compare.
 > [`adapters/README.md`](adapters/README.md)); and CI never fails on a low
 > score, only on an unhealthy run — so adding a case mcpm misses is a welcome
 > contribution, not a broken build.
+>
+> That second rule has now been exercised for real: the published
+> `@getmcpm/cli@0.26.3` **misses 3 of the 41 cases**, and CI stays green. See
+> [Current baseline](#current-baseline).
 
 ## Why
 
@@ -48,7 +52,7 @@ node runner/run.mjs --adapter "python my_guard_adapter.py" --name myguard
 **Requires Node 22.9+** (that is `@getmcpm/cli`'s own floor, not the runner's —
 the runner itself needs nothing newer than Node 16) and **`@getmcpm/cli` 0.25.0
 or later**, which is where `guard inspect` was added. An older `mcpm` on your
-PATH fails with `unknown command 'guard'`, which surfaces as 38 adapter errors
+PATH fails with `unknown command 'guard'`, which surfaces as 41 adapter errors
 rather than as a version message. No dependencies.
 
 The runner exits non-zero only on an **unhealthy run** — a case that got no
@@ -59,21 +63,33 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage |
 |---|---|---|---|---|---|
-| `@getmcpm/cli@0.26.3` | 100.0% | 0.0% | 100.0% | 100.0% | 38/38 |
+| `@getmcpm/cli@0.26.3` | 88.9% | 0.0% | 100.0% | 92.7% | 41/41 |
 
-Measured through `npx @getmcpm/cli@0.26.3 guard inspect --json`. Again: 100% is
-**by construction** (see the note at the top) — it is here so you can check your
-adapter is wired up correctly, and so the number has a name and a version
-attached instead of being a vendor claim.
+Measured through `npx @getmcpm/cli@0.26.3 guard inspect --json`.
 
-This table has exactly one guard in it. That is the honest state of the field
-right now, and the most useful contribution is a second row.
+**The reference guard no longer scores 100%, and that is the benchmark working.**
+Three cases added in corpus v2 — `exfil-param-in-schema`,
+`credential-phishing-wallet-solicitation`, `credential-phishing-financial-solicitation`
+— are missed by the published CLI. Not because mcpm lacks those detectors: it
+ships all three and `mcpm guard list-signatures` advertises them. They were
+unreachable *through the `guard inspect` seam this benchmark scores through*,
+which composed fewer detectors than mcpm's own relay did. The corpus could not
+have caught that while it was extracted from fixtures the same incomplete
+pipeline validated — so the blind spot was invisible in the guard, in its test
+suite, and here, simultaneously.
+
+A fix is on `main` in the CLI repo and lands in the next release; this row will
+gain a second version once it ships, rather than being quietly overwritten. The
+misses stay in the corpus either way.
+
+This table still has exactly one guard in it. That is the honest state of the
+field right now, and the most useful contribution is a second row.
 
 See [`adapters/README.md`](adapters/README.md) for the adapter contract.
 
 ## Corpus
 
-38 single-frame cases today (21 attack, 14 benign, 3 warn-and-forward), each in
+41 single-frame cases today (24 attack, 14 benign, 3 warn-and-forward), each in
 [`schema/case.schema.json`](schema/case.schema.json):
 
 | bucket | must | maps to |
@@ -108,13 +124,15 @@ failure mode that quietly overstates a guard, and it is why an unhealthy run is
 the one thing that fails CI.
 
 A note on two different counts of the same corpus: the scoreboard's
-"expected-detection" figure is **24** — the 21 `attacks/` cases *plus* the 3
+"expected-detection" figure is **27** — the 24 `attacks/` cases *plus* the 3
 `warn/` cases, since both must be flagged. The bucket split is printed alongside
 it so the two never appear to disagree.
 
-The reference guard scores 100% across the board **by construction** (the corpus
-is its own test suite); that is a baseline, not a boast. Real signal comes from
-scoring *other* guards and from adding cases the reference guard misses.
+Where the reference guard scores well, treat it as **construction, not evidence**
+— the corpus began as its own test suite. Real signal comes from scoring *other*
+guards, and from adding cases the reference guard misses. Corpus v2 did exactly
+the latter and dropped mcpm's published recall to 88.9%; a benchmark whose author
+always scores 100% is measuring nothing.
 
 ## ⚠ Handling
 

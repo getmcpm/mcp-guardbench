@@ -1,6 +1,6 @@
 {
   "generatedFrom": "@getmcpm/cli guard fixture corpus",
-  "count": 38,
+  "count": 41,
   "cases": [
     {
       "id": "credential-egress-github-pat",
@@ -13,6 +13,24 @@
       "bucket": "attacks",
       "category": "MCP-CREDENTIAL-EXFIL",
       "expected": "warn"
+    },
+    {
+      "id": "credential-phishing-card-cvv",
+      "bucket": "attacks",
+      "category": "MCP-CREDENTIAL-PHISHING",
+      "expected": "block"
+    },
+    {
+      "id": "credential-phishing-wallet-seed-phrase",
+      "bucket": "attacks",
+      "category": "MCP-CREDENTIAL-PHISHING",
+      "expected": "block"
+    },
+    {
+      "id": "exfil-param-in-schema",
+      "bucket": "attacks",
+      "category": "OWASP-MCP-1",
+      "expected": "block"
     },
     {
       "id": "owasp-mcp-1-ansi-in-description",

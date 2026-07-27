@@ -22,8 +22,9 @@ compare.
 > score, only on an unhealthy run — so adding a case mcpm misses is a welcome
 > contribution, not a broken build.
 >
-> That second rule has now been exercised for real: the published
-> `@getmcpm/cli@0.26.3` **misses 3 of the 41 cases**, and CI stays green. See
+> That second rule has now been exercised for real: corpus v2 added 3 cases the
+> then-current `@getmcpm/cli@0.26.3` **missed**, CI stayed green, and the result
+> is still in the table below rather than erased once it was fixed. See
 > [Current baseline](#current-baseline).
 
 ## Why
@@ -38,9 +39,9 @@ stick: versioned cases, an open schema, a language-agnostic runner, a scoreboard
 
 ```bash
 # score the reference guard through a pinned published mcpm (no install needed)
-MCPM_CMD="npx --yes @getmcpm/cli@0.26.3 guard inspect --json" \
-  node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.26.3
-# → out/scoreboard-mcpm@0.26.3-<date>.md
+MCPM_CMD="npx --yes @getmcpm/cli@0.27.0 guard inspect --json" \
+  node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.27.0
+# → out/scoreboard-mcpm@0.27.0-<date>.md
 
 # or whatever `mcpm` is already on your PATH
 npm run bench:mcpm
@@ -63,24 +64,29 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage |
 |---|---|---|---|---|---|
+| `@getmcpm/cli@0.27.0` | 100.0% | 0.0% | 100.0% | 100.0% | 41/41 |
 | `@getmcpm/cli@0.26.3` | 88.9% | 0.0% | 100.0% | 92.7% | 41/41 |
 
-Measured through `npx @getmcpm/cli@0.26.3 guard inspect --json`.
+Each measured through `npx @getmcpm/cli@<version> guard inspect --json`.
 
-**The reference guard no longer scores 100%, and that is the benchmark working.**
-Three cases added in corpus v2 — `exfil-param-in-schema`,
-`credential-phishing-wallet-solicitation`, `credential-phishing-financial-solicitation`
-— are missed by the published CLI. Not because mcpm lacks those detectors: it
-ships all three and `mcpm guard list-signatures` advertises them. They were
+**The 0.26.3 row is kept deliberately.** Corpus v2 added three cases —
+`exfil-param-in-schema`, `credential-phishing-wallet-solicitation`,
+`credential-phishing-financial-solicitation` — that the then-current release
+missed, dropping its recall to 88.9%. Not because mcpm lacked those detectors:
+it shipped all three and `mcpm guard list-signatures` advertised them. They were
 unreachable *through the `guard inspect` seam this benchmark scores through*,
-which composed fewer detectors than mcpm's own relay did. The corpus could not
-have caught that while it was extracted from fixtures the same incomplete
-pipeline validated — so the blind spot was invisible in the guard, in its test
-suite, and here, simultaneously.
+which composed fewer detectors than mcpm's own relay did.
 
-A fix is on `main` in the CLI repo and lands in the next release; this row will
-gain a second version once it ships, rather than being quietly overwritten. The
-misses stay in the corpus either way.
+The corpus could not have caught that while it was extracted from fixtures the
+same incomplete pipeline validated — so the blind spot was invisible in the
+guard, in its test suite, and here, simultaneously. That is the failure mode
+this project exists to make visible, and erasing the evidence once it was fixed
+would defeat the point.
+
+[`@getmcpm/cli@0.27.0`](https://github.com/getmcpm/cli/pull/153) routes all
+three detectors through one shared composition and restores 27/27 detections.
+Both runs exit 0 — a low score has never failed CI here, and now that rule has
+been exercised rather than assumed.
 
 This table still has exactly one guard in it. That is the honest state of the
 field right now, and the most useful contribution is a second row.

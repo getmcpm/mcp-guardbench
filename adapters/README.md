@@ -59,16 +59,21 @@ the one that authored this corpus, gets a privileged in-process path.
 npm run bench:mcpm
 
 # a pinned published version (recommended for a citable run)
-MCPM_CMD="npx --yes @getmcpm/cli@0.26.3 guard inspect --json" \
-  node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.26.3
+MCPM_CMD="npx --yes @getmcpm/cli@0.27.0 guard inspect --json" \
+  node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.27.0
 ```
 
-mcpm scores 100% on this corpus **by construction** — the corpus was extracted
-from mcpm's own CI fixtures, so a perfect reference score is expected and is
-*not* a claim of superiority. The benchmark earns its keep when (a) other guards
-are scored on the same cases and (b) the corpus grows with cases mcpm does
-**not** catch. Treat 100% as the sanity check that the adapter is wired up, not
-as a result.
+A high reference score is **construction, not evidence** — the corpus was
+extracted from mcpm's own CI fixtures, so it is expected and is *not* a claim of
+superiority. Treat it as the sanity check that your adapter is wired up, not as
+a result.
+
+The benchmark earns its keep when (a) other guards are scored on the same cases
+and (b) the corpus grows with cases the reference guard does **not** catch.
+Corpus v2 did (b): it added three cases that `@getmcpm/cli@0.26.3` missed,
+taking its recall to 88.9% until `0.27.0` fixed the underlying gap. Both rows
+are kept in the top-level README — a benchmark whose author always scores 100%
+is measuring nothing.
 
 ## Publishing an adapter
 

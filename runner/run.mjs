@@ -52,7 +52,14 @@ function loadCases() {
 const cases = loadCases();
 const byId = new Map(cases.map((c) => [c.id, c]));
 
-const VALID_ACTIONS = new Set(["pass", "warn", "block", "error"]);
+// "unsupported" is an ABSTENTION, not a verdict and not a failure: the guard
+// received the frame and is telling us this carrier is outside the input surface
+// it claims. Every MCP-aware guard surveyed (2026-08) accepts tools/list-carried
+// content only, so without this bucket their tool_response and elicitation cases
+// land as adapter errors (failing the run) or, far worse, get read as misses —
+// publishing a false-negative number against a guard that never claimed to look
+// there. Abstentions are excluded from every rate and reported as coverage.
+const VALID_ACTIONS = new Set(["pass", "warn", "block", "error", "unsupported"]);
 const truncate = (s) => (s.length > 120 ? `${s.slice(0, 120)}...` : s);
 
 // ---- run adapter ----------------------------------------------------------
@@ -126,14 +133,45 @@ for (const id of verdicts.keys()) {
 }
 
 const isAttack = (c) => c.expected.action !== "pass"; // attacks + warn
-let TP = 0, FN = 0, FP = 0, TN = 0, exact = 0, missingVerdict = 0, adapterErrors = 0, overBlocked = 0;
+let TP = 0, FN = 0, FP = 0, TN = 0, exact = 0, missingVerdict = 0, adapterErrors = 0, overBlocked = 0, unsupported = 0;
 const misses = [];
+const abstained = [];
 const catAgg = {}; // category -> {n, detected}
+const carrierAgg = {}; // carrier -> {n, scored, unsupported}
+
+// The carrier is the JSON-RPC shape the case rides in. It is derived here rather
+// than stored on the case so a guard's declared input surface can be compared
+// against the corpus without re-tagging 41 files.
+function carrierOf(m) {
+  if (!m || typeof m !== "object") return "unknown";
+  if (typeof m.method === "string") return m.method;
+  const r = m.result;
+  if (!r || typeof r !== "object") return "unknown";
+  for (const k of ["tools", "prompts", "resources", "contents", "content", "messages"]) {
+    if (r[k] !== undefined) return `result.${k}`;
+  }
+  if (r.protocolVersion !== undefined) return "initialize";
+  return "result.other";
+}
 
 for (const c of cases) {
+  const carrier = carrierOf(c.message);
+  carrierAgg[carrier] ??= { n: 0, scored: 0, unsupported: 0 };
+  carrierAgg[carrier].n++;
+
   const v = verdicts.get(c.id);
   if (!v) { missingVerdict++; misses.push({ id: c.id, reason: "no verdict emitted" }); continue; }
   if (v.action === "error") { adapterErrors++; misses.push({ id: c.id, reason: `adapter error: ${v.error ?? ""}` }); continue; }
+  // Abstention: scored in NO rate, in either direction. It is neither a miss nor
+  // a true negative — counting it as the latter would let a guard that abstains
+  // on everything report a perfect 0% false-positive rate.
+  if (v.action === "unsupported") {
+    unsupported++;
+    carrierAgg[carrier].unsupported++;
+    abstained.push({ id: c.id, carrier, reason: v.error ?? "carrier outside the guard's declared input surface" });
+    continue;
+  }
+  carrierAgg[carrier].scored++;
   const nonPass = v.action === "warn" || v.action === "block";
   if (v.action === c.expected.action) exact++;
 
@@ -160,7 +198,11 @@ for (const c of cases) {
   }
 }
 
-const scored = cases.length - missingVerdict - adapterErrors;
+const scored = cases.length - missingVerdict - adapterErrors - unsupported;
+// A case the guard ANSWERED, whether with a verdict or an honest abstention.
+// Coverage completeness is measured against this — an abstention is a valid
+// answer, a dropped case is not.
+const answered = scored + unsupported;
 const div = (a, b) => (b === 0 ? null : +(a / b).toFixed(4));
 const board = {
   adapter: adapterName,
@@ -174,8 +216,23 @@ const board = {
     warnBucket: cases.filter((c) => c.bucket === "warn").length,
     benign: cases.filter((c) => !isAttack(c)).length,
   },
-  coverage: { scored, missingVerdict, adapterErrors, complete: scored === cases.length },
+  coverage: {
+    scored,
+    unsupported,
+    answered,
+    missingVerdict,
+    adapterErrors,
+    complete: answered === cases.length,
+    // Every rate below is computed over `scored` ONLY. A guard that abstains on
+    // most of the corpus can still show a high recall on the slice it accepts;
+    // that number is real but it is NOT comparable to a guard scored on all 41.
+    scoredFraction: cases.length === 0 ? null : +(scored / cases.length).toFixed(4),
+  },
   contractViolations: { overBlockedWarnCases: overBlocked },
+  byCarrier: Object.fromEntries(
+    Object.entries(carrierAgg).map(([k, v]) => [k, { total: v.n, scored: v.scored, unsupported: v.unsupported }])
+  ),
+  abstained,
   anomalies,
   metrics: {
     recall: div(TP, TP + FN),
@@ -202,7 +259,7 @@ writeFileSync(jsonPath, JSON.stringify(board, null, 2) + "\n");
 
 // ---- markdown scoreboard --------------------------------------------------
 const m = board.metrics;
-const partial = scored !== cases.length;
+const partial = answered !== cases.length;
 const md = [
   `# Scoreboard — ${adapterName}`,
   ``,
@@ -219,6 +276,18 @@ const md = [
     : []),
   ...(anomalies.length
     ? [`> **⚠ ${anomalies.length} adapter anomal${anomalies.length === 1 ? "y" : "ies"}** — see the Anomalies section below.`, ``]
+    : []),
+  // A narrow guard's headline rate is computed over a SLICE. Saying so next to
+  // the number is the difference between an honest scope statement and a
+  // comparison that quietly flatters whichever guard accepts the most carriers.
+  ...(unsupported > 0
+    ? [
+        `> **⚠ PARTIAL SCOPE — this guard accepts ${scored} of ${cases.length} cases (${((scored / cases.length) * 100).toFixed(0)}%).**`,
+        `> It abstained on ${unsupported} case(s) whose carrier is outside its declared input surface. Abstentions are`,
+        `> excluded from every rate below, in both directions — they are neither misses nor true negatives. **The rates`,
+        `> are therefore NOT comparable to a guard scored on the full corpus.** See "Carrier coverage" for the split.`,
+        ``,
+      ]
     : []),
   // "attack" here means "expected to be detected" = the attacks/ bucket PLUS the
   // warn/ bucket. Spelled out because the README counts the buckets separately
@@ -240,6 +309,18 @@ const md = [
   `|---|---|---|`,
   ...Object.entries(board.byCategory).map(([k, v]) => `| ${k} | ${v.detected}/${v.total} | ${(v.recall * 100).toFixed(0)}% |`),
   ``,
+  ...(unsupported > 0
+    ? [
+        `## Carrier coverage`,
+        ``,
+        `| carrier | cases | scored | abstained |`,
+        `|---|---|---|---|`,
+        ...Object.entries(board.byCarrier)
+          .sort((a, b) => b[1].total - a[1].total)
+          .map(([k, v]) => `| \`${k}\` | ${v.total} | ${v.scored} | ${v.unsupported} |`),
+        ``,
+      ]
+    : []),
   ...(misses.length ? [`## Misses (${misses.length})`, ``, ...misses.map((x) => `- \`${x.id}\` — ${x.reason}`)] : [`_No misses._`]),
   ``,
   ...(anomalies.length
@@ -253,6 +334,7 @@ writeFileSync(mdPath, md);
 console.log(`\n─── ${adapterName} ───`);
 console.log(`recall ${pct(m.recall)}  fp-rate ${pct(m.fp_rate)}  precision ${pct(m.precision)}  exact ${pct(m.exact_action_accuracy)}`);
 console.log(`confusion: TP ${TP} FN ${FN} FP ${FP} TN ${TN}  (scored ${scored}/${cases.length})`);
+if (unsupported > 0) console.log(`abstained: ${unsupported} case(s) outside this guard's declared carriers — rates cover ${scored}/${cases.length} only`);
 if (misses.length) console.log(`misses: ${misses.length}`);
 if (anomalies.length) console.log(`anomalies: ${anomalies.length} (see scoreboard)`);
 console.log(`\n${mdPath}`);

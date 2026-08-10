@@ -17,8 +17,20 @@ The runner spawns your adapter once and speaks NDJSON over stdio:
     buys you nothing.
   - Emit `{"id": "...", "action": "error", "error": "..."}` if your guard
     throws on a frame — the runner counts it as unscored, not as a pass.
-  - `action` must be exactly one of `pass` / `warn` / `block` / `error`. Anything
-    else (a missing field, `"BLOCK"`, `"deny"`) is recorded as an adapter error,
+  - Emit `{"id": "...", "action": "unsupported", "error": "<why>"}` when the frame's
+    carrier is **outside the input surface your guard claims** — for example, a guard
+    that inspects `tools/list` output has no opinion about a `tools/call` result or a
+    server-initiated `elicitation/create`. This is an **abstention**: the runner excludes
+    it from every rate *in both directions* and reports it as coverage, so it is neither
+    a false negative nor free credit.
+    - Abstain on **scope, never on capability.** "My guard cannot parse this shape" is
+      `unsupported`; "my guard looked and found nothing" is `pass`; "my guard tried and
+      broke" is `error`. Using `unsupported` to duck cases you expect to fail inflates
+      your slice — it is self-reported and unverified, but `scoredFraction` is printed
+      beside every rate and each abstention is listed with your stated reason, so the
+      claim is auditable.
+  - `action` must be exactly one of `pass` / `warn` / `block` / `unsupported` / `error`.
+    Anything else (a missing field, `"BLOCK"`, `"deny"`) is recorded as an adapter error,
     never silently treated as a pass.
   - Write **only** verdicts to stdout. The runner matches on `id`, but adapters
     that correlate positionally (the reference one does) cannot tolerate a stray

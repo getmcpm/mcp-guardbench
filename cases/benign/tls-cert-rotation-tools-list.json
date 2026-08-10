@@ -7,7 +7,7 @@
   "expected": {
     "action": "pass"
   },
-  "source": "False-positive probe authored for this benchmark. The credential-egress detector is prefix-anchored on a literal PEM block (-----BEGIN ... PRIVATE KEY-----), deliberately not on the phrase 'private key', because certificate, SSH and PKI tooling discusses private keys constantly without ever emitting one. A substring matcher cannot make that distinction.",
+  "source": "False-positive probe authored for this benchmark. PKI tooling discusses private keys constantly in its tool descriptions without ever emitting one, and a substring matcher cannot tell the discussion from the artefact. This is a CARRIER-SCOPE probe: the credential-egress detector inspects `tool_response`, so key vocabulary in `tools/list` metadata must pass regardless of its own anchoring. (Its PEM-block anchoring is exercised separately by the credential-egress attack/benign pair on the tool_response carrier.)",
   "message": {
     "jsonrpc": "2.0",
     "id": 612,

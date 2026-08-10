@@ -7,7 +7,7 @@
   "expected": {
     "action": "pass"
   },
-  "source": "False-positive probe authored for this benchmark rather than extracted from any guard's fixtures. A substring matcher fires on `.ssh` and `id_rsa`; here both are the ordinary vocabulary of a key-management server. The OWASP MCP-7 path-exfil signature is anchored on read-then-send shape, not on a sensitive path appearing at all, so naming the path in a tool description must pass.",
+  "source": "False-positive probe authored for this benchmark rather than extracted from any guard's fixtures. A substring matcher fires on `.ssh` and `id_rsa`; here both are the ordinary vocabulary of a key-management server. This is a CARRIER-SCOPE probe: the OWASP MCP-7 path-exfil signature is a bare path alternation with no read/send verb, so it would match this text — it passes only because that signature targets `tool_call_args`, and these paths appear in a `tools/list` description. A guard that applies path patterns to metadata without regard to carrier fails this case.",
   "message": {
     "jsonrpc": "2.0",
     "id": 610,

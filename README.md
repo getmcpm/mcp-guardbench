@@ -86,7 +86,7 @@ Every row above was re-measured on v3; none is carried over from a smaller corpu
 > `elicitation/create` / `sampling/createMessage` frames. The adapter returns
 > `unsupported` on those 32 cases, and the runner excludes abstentions from every rate
 > **in both directions** — they are neither misses nor clean passes. Its 25.0% recall is
-> 2-of-8 on the slice it accepts, not 2-of-24 on the corpus, and its 28.6% fp-rate is
+> 2-of-8 on the slice it accepts, not 2-of-27 on the corpus, and its 28.6% fp-rate is
 > 2-of-7 benign.
 >
 > **Its two false positives are not an artefact of our severity mapping.** `fp_rate`
@@ -103,9 +103,10 @@ Every row above was re-measured on v3; none is carried over from a smaller corpu
 >
 > **41 of the 47 cases were extracted from mcpm's own fixtures.** That is a structural
 > home-field advantage, and it is the same self-concealing shape documented below, pointed
-> outward. The Unicode-evasion family is over-weighted relative to real-world frequency
-> because mcpm shipped TAG-block coverage days before this run. Cisco's scanner also
-> detects typosquatting, transport exposure, and vulnerable packages — for which this
+> outward. Seven of the 24 attack cases are Unicode-evasion (zero-width, bidi, ANSI,
+> homoglyph, full-width) — a family mcpm normalises for by design, over-weighted relative
+> to its real-world frequency, and four of Cisco's six misses fall in it. Cisco's scanner
+> also detects typosquatting, transport exposure, and vulnerable packages — for which this
 > corpus has no cases, so it earns no credit for detection we never tested. The six v3
 > benign cases are the exception: they were written here, against no guard's
 > implementation, and mcpm was measured on them like everyone else.
@@ -139,16 +140,23 @@ Six cases later the floor draws **30.0%**, and `@getmcpm/cli` still draws **0.0%
 now a measurement rather than an artefact of an easy corpus. It is also the whole reason to
 keep a floor: the number that mattered most was one nobody would have thought to question.
 
-**2. The tools/list slice could not discriminate — now it can, barely.** On corpus v2 the
-naive baseline and `cisco-ai-mcp-scanner`'s YARA analyzer scored *identically* on the 11
-cases Cisco accepts, miss sets overlapping on 5 of 6. A slice on which a substring grep
-ties a shipping scanner is too small and too easy to separate them.
+**2. The tools/list slice measured nothing on the false-positive axis.** On corpus v2, over
+the 11 cases Cisco accepts, the naive baseline and `cisco-ai-mcp-scanner`'s YARA analyzer
+drew the *same* false-positive rate — **0.0% each, on three benign cases**. Three benign
+cases cannot separate a substring grep from a shipping scanner, and 0.0% against them is
+not a measurement.
 
-Four of the six v3 cases land on that carrier, and the tie broke. Restricted to the 15
-cases Cisco now scores, the baseline runs **37.5% recall / 57.1% fp-rate** against YARA's
-**25.0% / 28.6%**. Cisco halves the false positives — real contextual signal a substring
-matcher does not have — while sitting *below* the floor on recall. Both numbers are one
-analyzer on a 15-case slice; read them as directional, not as a verdict on the product.
+Four of the six v3 cases land on that carrier, and the FP axis came alive. Restricted to
+the 15 cases Cisco now scores, the baseline runs **57.1% fp-rate** against YARA's
+**28.6%** — Cisco halves it, which is real contextual signal a substring matcher does not
+have. Recall did not move and was never tied: the floor scored **37.5%** against YARA's
+**25.0%** on both corpora, so the substring floor has been ahead on recall the whole time.
+Every one of these figures is one analyzer on a small slice; read them as directional, not
+as a verdict on the product.
+
+> An earlier revision of this section said the two "scored identically" on v2 and that "the
+> tie broke". That was wrong, and the round-2 review caught it: only the false-positive
+> rates ever tied. The recall gap was there from the start and we misread it.
 
 Concretely: `tls-cert-rotation-tools-list` and `system-prompt-management-tools-list` fool
 the baseline and Cisco passes them. `ssh-key-management-tools-list` and
@@ -165,8 +173,8 @@ maintain the reference guard, which is the exact provenance problem stated above
 cases from outside this project are worth more than any of them.
 
 **The 0.26.3 row is kept deliberately.** Corpus v2 added three cases —
-`exfil-param-in-schema`, `credential-phishing-wallet-solicitation`,
-`credential-phishing-financial-solicitation` — that the then-current release
+`exfil-param-in-schema`, `credential-phishing-wallet-seed-phrase`,
+`credential-phishing-card-cvv` — that the then-current release
 missed, dropping its recall to 88.9%. Not because mcpm lacked those detectors:
 it shipped all three and `mcpm guard list-signatures` advertised them. They were
 unreachable *through the `guard inspect` seam this benchmark scores through*,
@@ -220,6 +228,15 @@ License-clean — no MCPTox artifacts copied. Six carry `"provenance": "native"`
 here, against no guard's implementation, because **a corpus extracted from one guard's
 fixtures cannot grow in a direction that guard cannot see** — the failure this project
 exists to make visible. `cases/index.json` counts both.
+⚠ **The corpus is deliberately pinned behind upstream, and re-extracting will change it.**
+Corpus v3 = `@getmcpm/cli`'s fixtures as of **v0.28.0's release**, plus the six native
+cases. Upstream has since grown to 55 single-frame fixtures; running the command below
+today yields **61** cases and every published number above stops applying. The 14 extra are
+held back on purpose: nine are TAG-block attacks added when mcpm shipped that coverage, and
+importing a family the reference guard had just fixed would inflate its lead by
+construction. Taking them is a corpus-balance decision that has to come with a re-measure of
+every row, not a routine sync.
+
 Regenerate/extend with `node scripts/extract-from-mcpm.mjs <path-to-getmcpm/cli>`
 — it reads the upstream fixtures, so it needs a checkout of
 [getmcpm/cli](https://github.com/getmcpm/cli) (it defaults to a sibling `../cli`

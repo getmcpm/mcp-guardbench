@@ -30,9 +30,10 @@ that slice is seven cases, so the false-positive rate moves in steps of 14 point
 
 **3. The corpus was extracted from mcpm's own fixture directory.** This is the
 self-concealing shape mcpm documented in v0.27.0, pointed outward: a corpus shaped by one
-guard's detection model cannot help but flatter that guard. Concretely — the Unicode
-evasion family is over-weighted relative to its real-world frequency because mcpm shipped
-TAG-block coverage in v0.28.0, days before this run. Cisco's scanner also detects
+guard's detection model cannot help but flatter that guard. Concretely — seven of the 24
+attack cases are Unicode evasion (zero-width, bidi, ANSI, homoglyph, full-width), a family
+mcpm normalises for by design and which is over-weighted here relative to its real-world
+frequency; four of the six misses below fall in it. Cisco's scanner also detects
 typosquatting, transport exposure, and vulnerable packages, for which this corpus contains
 no cases at all, so it earns no credit for detection we simply never tested.
 
@@ -61,9 +62,9 @@ is an artefact of this adapter's severity→action mapping.
 
 **Against the floor, on this same 15-case slice:** the naive substring baseline scores
 37.5% recall / 57.1% fp-rate; YARA scores 25.0% / 28.6%. It halves the false positives and
-sits below the floor on recall. On corpus v2 the two were *indistinguishable* on this
-carrier — the v3 benign cases are what separated them, which is the whole argument for
-publishing a floor.
+sits below the floor on recall. On corpus v2 the two tied on false positives — 0.0% each,
+over only three benign cases — so that axis measured nothing until the v3 benign cases
+arrived. Recall was never tied: 37.5% vs 25.0% on both corpora.
 
 ⚠ Prior run, corpus v2 (11/41 scored): recall 25.0%, fp-rate 0.0%, precision 100%. The
 fp-rate moved because the corpus gained adversarial benign cases, **not** because the

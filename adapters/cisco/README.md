@@ -20,12 +20,13 @@ analyzers we do not run. The adapter scrubs both key variables so a developer's 
 credentials cannot silently convert a reproducible offline run into a networked one.
 Set `MCP_SCANNER_ANALYZERS` to score the full product; label that row differently.
 
-**2. It accepts 11 of 41 cases, and abstains on the other 30.** `mcp-scanner static`
+**2. It accepts 15 of 47 cases, and abstains on the other 32.** `mcp-scanner static`
 consumes tools/prompts/resources *list* output. It has no input path for tool responses,
 `tools/call` arguments, `initialize` instructions, or server-initiated
 `elicitation/create` / `sampling/createMessage` frames. Those are recorded `unsupported`,
-excluded from every rate in both directions. **The rates are computed over the 11-case
-slice and are not comparable to a guard scored on the full corpus.**
+excluded from every rate in both directions. **The rates are computed over the 15-case
+slice and are not comparable to a guard scored on the full corpus.** The benign half of
+that slice is seven cases, so the false-positive rate moves in steps of 14 points.
 
 **3. The corpus was extracted from mcpm's own fixture directory.** This is the
 self-concealing shape mcpm documented in v0.27.0, pointed outward: a corpus shaped by one
@@ -40,15 +41,33 @@ severity string and takes no position on blocking. `HIGH`/`CRITICAL` → block,
 `MEDIUM`/`LOW` → warn is a mapping this adapter chose; it moves `exact-action accuracy`
 and nothing else.
 
-## Result, 2026-08-09 — `cisco-ai-mcp-scanner@4.8.2`, YARA only
+## Result, 2026-08-10 — `cisco-ai-mcp-scanner@4.8.2`, YARA only, corpus v3
 
-Scored 11/41 · abstained 30 · recall **25.0%** (2/8) · fp-rate **0.0%** (0/3) ·
-precision 100% · 0 anomalies.
+Scored 15/47 · abstained 32 · recall **25.0%** (2/8) · fp-rate **28.6%** (2/7) ·
+precision **50.0%** · exact-action 46.7% · 0 anomalies.
 
 Missed, all on `tools/list` descriptions it *did* accept — capability, not scope:
 `owasp-mcp-1-zwsp-in-description`, `-bidi-in-description`, `-ansi-in-description`
 (hidden-character evasion), `-multitool-poisoning`, `-system-tag`, and
 `exfil-param-in-schema` (no context-exfil property-key detector).
+
+False-positived (`block` on benign) on two of the four native v3 cases that land on this
+carrier: `ssh-key-management-tools-list` — a key-management server whose tools name
+`~/.ssh/authorized_keys` and `id_rsa.pub` — and `wallet-non-custodial-disclaimer`, whose
+descriptions state that the tool *never* asks for a seed phrase or private key. It
+correctly passed `tls-cert-rotation-tools-list` and `system-prompt-management-tools-list`,
+both of which fool the naive baseline. Note that `fp_rate` counts any non-pass, so neither
+is an artefact of this adapter's severity→action mapping.
+
+**Against the floor, on this same 15-case slice:** the naive substring baseline scores
+37.5% recall / 57.1% fp-rate; YARA scores 25.0% / 28.6%. It halves the false positives and
+sits below the floor on recall. On corpus v2 the two were *indistinguishable* on this
+carrier — the v3 benign cases are what separated them, which is the whole argument for
+publishing a floor.
+
+⚠ Prior run, corpus v2 (11/41 scored): recall 25.0%, fp-rate 0.0%, precision 100%. The
+fp-rate moved because the corpus gained adversarial benign cases, **not** because the
+scanner changed.
 
 ## Two behaviours any future adapter author must know
 

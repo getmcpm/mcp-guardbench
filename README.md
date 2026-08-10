@@ -53,7 +53,7 @@ node runner/run.mjs --adapter "python my_guard_adapter.py" --name myguard
 **Requires Node 22.9+** (that is `@getmcpm/cli`'s own floor, not the runner's —
 the runner itself needs nothing newer than Node 16) and **`@getmcpm/cli` 0.25.0
 or later**, which is where `guard inspect` was added. An older `mcpm` on your
-PATH fails with `unknown command 'guard'`, which surfaces as 41 adapter errors
+PATH fails with `unknown command 'guard'`, which surfaces as 47 adapter errors
 rather than as a version message. No dependencies.
 
 The runner exits non-zero only on an **unhealthy run** — a case that got no
@@ -64,24 +64,36 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage |
 |---|---|---|---|---|---|
-| `@getmcpm/cli@0.28.0` | 100.0% | 0.0% | 100.0% | 100.0% | 41/41 |
-| `@getmcpm/cli@0.27.0` | 100.0% | 0.0% | 100.0% | 100.0% | 41/41 |
-| `@getmcpm/cli@0.26.3` | 88.9% | 0.0% | 100.0% | 92.7% | 41/41 |
-| `cisco-ai-mcp-scanner@4.8.2` ⚠ YARA only | 25.0% | 0.0% | 100.0% | 45.5% | **11/41** |
-| *naive baseline (substring match)* | 44.4% | 0.0% | 100.0% | 51.2% | 41/41 |
+| `@getmcpm/cli@0.28.0` | 100.0% | 0.0% | 100.0% | 100.0% | 47/47 |
+| `@getmcpm/cli@0.27.0` | 100.0% | 0.0% | 100.0% | 100.0% | 47/47 |
+| `@getmcpm/cli@0.26.3` | 88.9% | 0.0% | 100.0% | 93.6% | 47/47 |
+| `cisco-ai-mcp-scanner@4.8.2` ⚠ YARA only | 25.0% | 28.6% | 50.0% | 46.7% | **15/47** |
+| *naive baseline (substring match)* | 44.4% | 30.0% | 66.7% | 44.7% | 47/47 |
 
 mcpm rows measured through `npx @getmcpm/cli@<version> guard inspect --json`; the Cisco row
 through `mcp-scanner static`. Every guard is driven by its own published CLI.
 
+**Corpus v3 (47 cases)** adds six benign cases written to break a substring matcher — see
+[the floor](#the-floor-and-what-it-exposes-about-this-corpus) below. They are the first
+cases here **not** extracted from mcpm's fixtures, and they moved three of the five rows.
+Every row above was re-measured on v3; none is carried over from a smaller corpus.
+
 > ### ⚠ The Cisco row is not comparable to the mcpm rows. Read this before quoting it.
 >
-> **It answered 41 of 41 and was *scored* on 11.** `mcp-scanner static` consumes
+> **It answered 47 of 47 and was *scored* on 15.** `mcp-scanner static` consumes
 > tools/prompts/resources *list* output. It has no input path for tool responses,
 > `tools/call` arguments, `initialize` instructions, or server-initiated
 > `elicitation/create` / `sampling/createMessage` frames. The adapter returns
-> `unsupported` on those 30 cases, and the runner excludes abstentions from every rate
+> `unsupported` on those 32 cases, and the runner excludes abstentions from every rate
 > **in both directions** — they are neither misses nor clean passes. Its 25.0% recall is
-> 2-of-8 on the slice it accepts, not 2-of-24 on the corpus.
+> 2-of-8 on the slice it accepts, not 2-of-24 on the corpus, and its 28.6% fp-rate is
+> 2-of-7 benign.
+>
+> **Its two false positives are not an artefact of our severity mapping.** `fp_rate`
+> counts any non-pass on a benign case, so both would still be false positives if the
+> adapter mapped them to `warn` instead of `block`. What they are is YARA-tier only, on a
+> seven-case benign slice — a small denominator, and the analyzers we could not run are
+> plausibly the ones that would contextualise a tool description.
 >
 > **It ran one of its three analyzers.** The default set is `api,yara,llm`; the other two
 > need an API key and an LLM key, and a benchmark anybody can reproduce cannot require
@@ -89,12 +101,14 @@ through `mcp-scanner static`. Every guard is driven by its own published CLI.
 > reader would care most about. Score the full product by setting
 > `MCP_SCANNER_ANALYZERS` — and label that row differently.
 >
-> **The corpus was extracted from mcpm's own fixtures.** That is a structural home-field
-> advantage, and it is the same self-concealing shape documented below, pointed outward.
-> The Unicode-evasion family is over-weighted relative to real-world frequency because
-> mcpm shipped TAG-block coverage days before this run. Cisco's scanner also detects
-> typosquatting, transport exposure, and vulnerable packages — for which this corpus has
-> no cases, so it earns no credit for detection we never tested.
+> **41 of the 47 cases were extracted from mcpm's own fixtures.** That is a structural
+> home-field advantage, and it is the same self-concealing shape documented below, pointed
+> outward. The Unicode-evasion family is over-weighted relative to real-world frequency
+> because mcpm shipped TAG-block coverage days before this run. Cisco's scanner also
+> detects typosquatting, transport exposure, and vulnerable packages — for which this
+> corpus has no cases, so it earns no credit for detection we never tested. The six v3
+> benign cases are the exception: they were written here, against no guard's
+> implementation, and mcpm was measured on them like everyone else.
 >
 > **The block-vs-warn ladder is ours, not theirs.** It emits `is_safe` plus a severity and
 > takes no position on blocking; mapping `HIGH`/`CRITICAL`→block and `MEDIUM`/`LOW`→warn is
@@ -110,32 +124,45 @@ no severity model, about thirty seconds of thought. It exists because **a score 
 nothing without a floor**, and it is scored on the full corpus so any row can be compared
 to it directly.
 
-Three things fall out of it, and two are unflattering to us:
+Publishing it immediately exposed two defects in this corpus, both ours. Corpus v3 is the
+repair, and the numbers below are what the repair changed.
 
-**1. mcpm's lead over the floor is real.** 44.4% → 100% recall on identical cases. Whatever
-else is true of a self-published benchmark, the reference guard is not merely
-pattern-matching the obvious.
+**1. Our benign corpus did not punish naive matching — now it does.** On corpus v2 the
+baseline's false-positive rate was **0.0%** across all 14 benign cases. A dumb substring
+matcher *should* trip on legitimate traffic: security changelogs describing an injection
+CVE, a key-management server whose tools are about `~/.ssh`, a wallet server that
+disclaims ever asking for a seed phrase. It did not, which meant the benign set was not
+testing false-positive resistance at all, and every 0.0% in the table — mcpm's included —
+was a weaker claim than it looked.
 
-**2. The 11-case tools/list slice cannot discriminate.** Restricted to the same slice the
-Cisco adapter accepts, the naive baseline and `cisco-ai-mcp-scanner`'s YARA analyzer score
-*identically* — recall 25.0%, precision 100%, exact 45.5% — and their miss sets overlap on
-5 of 6, differing by exactly one case each (the baseline catches `multitool-poisoning` and
-misses `when-user-asks-poisoning`; YARA does the reverse). **Do not read the Cisco row as a
-measurement of that product's quality.** An 11-case slice on which a substring grep ties a
-shipping scanner is a slice too small and too easy to separate them, and the correct
-conclusion is that this corpus needs cases in that carrier that a naive matcher fails.
+Six cases later the floor draws **30.0%**, and `@getmcpm/cli` still draws **0.0%**. That is
+now a measurement rather than an artefact of an easy corpus. It is also the whole reason to
+keep a floor: the number that mattered most was one nobody would have thought to question.
 
-**3. Our benign corpus does not punish naive matching.** The baseline's false-positive rate
-is **0.0%** across all 14 benign cases. A dumb substring matcher should be tripping on
-legitimate prose that discusses prompt injection, security documentation quoting attack
-strings, i18n text, and tool descriptions that legitimately mention system prompts. That it
-does not means the benign set is currently too easy, and every 0.0% fp-rate in the table
-above — mcpm's included — is a weaker claim than it looks. **This is the most useful
-contribution the corpus could receive right now:** benign cases adversarial enough to make
-a naive matcher fail, so that a real guard's zero means something.
+**2. The tools/list slice could not discriminate — now it can, barely.** On corpus v2 the
+naive baseline and `cisco-ai-mcp-scanner`'s YARA analyzer scored *identically* on the 11
+cases Cisco accepts, miss sets overlapping on 5 of 6. A slice on which a substring grep
+ties a shipping scanner is too small and too easy to separate them.
+
+Four of the six v3 cases land on that carrier, and the tie broke. Restricted to the 15
+cases Cisco now scores, the baseline runs **37.5% recall / 57.1% fp-rate** against YARA's
+**25.0% / 28.6%**. Cisco halves the false positives — real contextual signal a substring
+matcher does not have — while sitting *below* the floor on recall. Both numbers are one
+analyzer on a 15-case slice; read them as directional, not as a verdict on the product.
+
+Concretely: `tls-cert-rotation-tools-list` and `system-prompt-management-tools-list` fool
+the baseline and Cisco passes them. `ssh-key-management-tools-list` and
+`wallet-non-custodial-disclaimer` fool both. All four pass on every mcpm row.
+
+**3. mcpm's lead over the floor is real, and now visible in both dimensions.** 44.4% → 100%
+recall and 30.0% → 0.0% fp-rate, on identical cases. Whatever else is true of a
+self-published benchmark, the reference guard is not merely pattern-matching the obvious —
+and the case that most nearly caught it out was one written to catch it out.
 
 We would rather publish a floor that embarrasses our own corpus than a scoreboard that
-flatters it.
+flatters it. Six cases is a start, not a fix: they were written by the same people who
+maintain the reference guard, which is the exact provenance problem stated above. Benign
+cases from outside this project are worth more than any of them.
 
 **The 0.26.3 row is kept deliberately.** Corpus v2 added three cases —
 `exfil-param-in-schema`, `credential-phishing-wallet-solicitation`,
@@ -160,7 +187,7 @@ been exercised rather than assumed.
 of scoring a second guard was not detection quality, it was that guards do not agree on
 what an input *is*. Every MCP-aware scanner we surveyed accepts tools/list-carried content
 and nothing else. Without a way to say "this carrier is outside what I claim to inspect,"
-those 30 cases would have been scored as misses — manufacturing a false negative against a
+those 32 cases would have been scored as misses — manufacturing a false negative against a
 tool that never claimed to look there — or crashed the run outright. So the runner grew an
 `unsupported` action before the row could be published honestly.
 
@@ -176,7 +203,7 @@ See [`adapters/README.md`](adapters/README.md) for the adapter contract.
 
 ## Corpus
 
-41 single-frame cases today (24 attack, 14 benign, 3 warn-and-forward), each in
+47 single-frame cases today (24 attack, 20 benign, 3 warn-and-forward), each in
 [`schema/case.schema.json`](schema/case.schema.json):
 
 | bucket | must | maps to |
@@ -185,10 +212,15 @@ See [`adapters/README.md`](adapters/README.md) for the adapter contract.
 | `benign/`  | `pass` (false-positive floor) | realistic tools/list, file reads, i18n prose, "ignore" in legitimate docs |
 | `warn/`    | `warn`, never `block` | injection in *retrieved* resource/prompt data (forward-with-warning) |
 
-Provenance: extracted from `@getmcpm/cli`'s hand-authored guard fixtures, which
-derive from **public** attack methodology (Invariant Labs 2025, MCPoison
-CVE-2025-54136, Equixly/Pillar audits). License-clean — no MCPTox artifacts
-copied. Regenerate/extend with `node scripts/extract-from-mcpm.mjs <path-to-getmcpm/cli>`
+Provenance is **mixed, and each case says which it is.** 41 cases carry
+`"provenance": "extracted"` (or no field, which predates the distinction): they come from
+`@getmcpm/cli`'s hand-authored guard fixtures, which derive from **public** attack
+methodology (Invariant Labs 2025, MCPoison CVE-2025-54136, Equixly/Pillar audits).
+License-clean — no MCPTox artifacts copied. Six carry `"provenance": "native"`: written
+here, against no guard's implementation, because **a corpus extracted from one guard's
+fixtures cannot grow in a direction that guard cannot see** — the failure this project
+exists to make visible. `cases/index.json` counts both.
+Regenerate/extend with `node scripts/extract-from-mcpm.mjs <path-to-getmcpm/cli>`
 — it reads the upstream fixtures, so it needs a checkout of
 [getmcpm/cli](https://github.com/getmcpm/cli) (it defaults to a sibling `../cli`
 directory). The generated cases are committed, so this is only needed when the
@@ -253,13 +285,14 @@ file-ingestion scope.
 Three contributions matter most, and the first is new — it comes from what the naive
 baseline exposed above:
 
-1. **A benign case that a naive substring matcher gets wrong.** The floor currently scores
-   **0.0% false-positive rate** on our benign set, which means the set is not testing
-   false-positive resistance at all, and every 0.0% in the baseline table is softer than it
-   reads. Realistic traffic that *looks* like an attack — security documentation quoting
-   injection strings, a tool that legitimately manipulates SSH config, i18n prose, a
-   changelog describing a CVE — is worth more to this benchmark right now than another
-   attack case.
+1. **A benign case that a naive substring matcher gets wrong.** Corpus v3 took the floor's
+   false-positive rate from 0.0% to 30.0%, which is the only reason mcpm's 0.0% means
+   anything — but all six were written by the people who maintain the reference guard, so
+   they cannot rule out the blind spot they were written to test. Realistic traffic that
+   *looks* like an attack — security documentation quoting injection strings, a tool that
+   legitimately manipulates SSH config, i18n prose, a changelog describing a CVE — is worth
+   more to this benchmark right now than another attack case, and it is worth most of all
+   coming from someone who did not write the guard.
 2. **An adapter for another guard.** Implement the stdio contract in any
    language — see [`adapters/README.md`](adapters/README.md). The only rule is
    that it must drive the guard's own published artifact (CLI or public library

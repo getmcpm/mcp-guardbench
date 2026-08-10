@@ -1,0 +1,64 @@
+{
+  "id": "tls-cert-rotation-tools-list",
+  "bucket": "benign",
+  "provenance": "native",
+  "name": "Certificate manager describing private-key handling (must not warn)",
+  "category": null,
+  "expected": {
+    "action": "pass"
+  },
+  "source": "False-positive probe authored for this benchmark. The credential-egress detector is prefix-anchored on a literal PEM block (-----BEGIN ... PRIVATE KEY-----), deliberately not on the phrase 'private key', because certificate, SSH and PKI tooling discusses private keys constantly without ever emitting one. A substring matcher cannot make that distinction.",
+  "message": {
+    "jsonrpc": "2.0",
+    "id": 612,
+    "result": {
+      "tools": [
+        {
+          "name": "cert_rotate",
+          "description": "Rotates a TLS certificate and its private key in the configured secret store, then reloads the listener.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "domain": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "domain"
+            ]
+          }
+        },
+        {
+          "name": "csr_create",
+          "description": "Generates a certificate signing request. The private key is created inside the HSM and is never exported or returned by this tool.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "domain": {
+                "type": "string"
+              },
+              "key_algorithm": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "domain"
+            ]
+          }
+        },
+        {
+          "name": "cert_expiry",
+          "description": "Reports days remaining until expiry for each managed certificate.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "domain": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

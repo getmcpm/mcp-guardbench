@@ -26,8 +26,7 @@ const OUT = path.join(BENCH, "cases");
 
 const BUCKETS = ["attacks", "benign", "warn"]; // single-frame; drift deferred
 
-let total = 0;
-const index = [];
+let extractedCount = 0;
 for (const bucket of BUCKETS) {
   const dir = path.join(SRC, bucket);
   const outDir = path.join(OUT, bucket);
@@ -48,14 +47,46 @@ for (const bucket of BUCKETS) {
       message: fx.message,
     };
     writeFileSync(path.join(outDir, `${id}.json`), JSON.stringify(kase, null, 2) + "\n");
-    index.push({ id, bucket, category: kase.category, expected: kase.expected.action });
-    total++;
+    extractedCount++;
   }
 }
 
+// The index is rebuilt by SCANNING the case directories, not by accumulating
+// what this script just wrote. Cases hand-authored in this repo would otherwise
+// disappear from the manifest on every re-extraction — and those are exactly the
+// cases the corpus most needs, since a corpus extracted from one guard's fixtures
+// cannot grow in a direction that guard cannot see. A case with no `provenance`
+// field predates this distinction and came from the extraction.
+const index = [];
+for (const bucket of BUCKETS) {
+  const outDir = path.join(OUT, bucket);
+  for (const f of readdirSync(outDir).filter((f) => f.endsWith(".json"))) {
+    const k = JSON.parse(readFileSync(path.join(outDir, f), "utf8"));
+    index.push({
+      id: k.id,
+      bucket,
+      category: k.category ?? null,
+      expected: k.expected.action,
+      provenance: k.provenance ?? "extracted",
+    });
+  }
+}
+const nativeCount = index.filter((c) => c.provenance === "native").length;
+
 writeFileSync(
   path.join(OUT, "index.json"),
-  JSON.stringify({ generatedFrom: "@getmcpm/cli guard fixture corpus", count: total, cases: index }, null, 2) + "\n"
+  JSON.stringify(
+    {
+      sources: {
+        extracted: { from: "@getmcpm/cli guard fixture corpus", count: index.length - nativeCount },
+        native: { from: "hand-authored in mcp-guardbench", count: nativeCount },
+      },
+      count: index.length,
+      cases: index,
+    },
+    null,
+    2
+  ) + "\n"
 );
-console.log(`Extracted ${total} cases into ${path.relative(BENCH, OUT)}/ (${BUCKETS.join(", ")}).`);
+console.log(`Extracted ${extractedCount}; indexed ${index.length} (${nativeCount} native) in ${path.relative(BENCH, OUT)}/.`);
 for (const b of BUCKETS) console.log(`  ${b}: ${index.filter((c) => c.bucket === b).length}`);

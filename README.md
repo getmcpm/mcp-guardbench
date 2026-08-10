@@ -64,10 +64,78 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage |
 |---|---|---|---|---|---|
+| `@getmcpm/cli@0.28.0` | 100.0% | 0.0% | 100.0% | 100.0% | 41/41 |
 | `@getmcpm/cli@0.27.0` | 100.0% | 0.0% | 100.0% | 100.0% | 41/41 |
 | `@getmcpm/cli@0.26.3` | 88.9% | 0.0% | 100.0% | 92.7% | 41/41 |
+| `cisco-ai-mcp-scanner@4.8.2` ⚠ YARA only | 25.0% | 0.0% | 100.0% | 45.5% | **11/41** |
+| *naive baseline (substring match)* | 44.4% | 0.0% | 100.0% | 51.2% | 41/41 |
 
-Each measured through `npx @getmcpm/cli@<version> guard inspect --json`.
+mcpm rows measured through `npx @getmcpm/cli@<version> guard inspect --json`; the Cisco row
+through `mcp-scanner static`. Every guard is driven by its own published CLI.
+
+> ### ⚠ The Cisco row is not comparable to the mcpm rows. Read this before quoting it.
+>
+> **It answered 41 of 41 and was *scored* on 11.** `mcp-scanner static` consumes
+> tools/prompts/resources *list* output. It has no input path for tool responses,
+> `tools/call` arguments, `initialize` instructions, or server-initiated
+> `elicitation/create` / `sampling/createMessage` frames. The adapter returns
+> `unsupported` on those 30 cases, and the runner excludes abstentions from every rate
+> **in both directions** — they are neither misses nor clean passes. Its 25.0% recall is
+> 2-of-8 on the slice it accepts, not 2-of-24 on the corpus.
+>
+> **It ran one of its three analyzers.** The default set is `api,yara,llm`; the other two
+> need an API key and an LLM key, and a benchmark anybody can reproduce cannot require
+> either. This under-represents the product, plausibly in exactly the semantic detection a
+> reader would care most about. Score the full product by setting
+> `MCP_SCANNER_ANALYZERS` — and label that row differently.
+>
+> **The corpus was extracted from mcpm's own fixtures.** That is a structural home-field
+> advantage, and it is the same self-concealing shape documented below, pointed outward.
+> The Unicode-evasion family is over-weighted relative to real-world frequency because
+> mcpm shipped TAG-block coverage days before this run. Cisco's scanner also detects
+> typosquatting, transport exposure, and vulnerable packages — for which this corpus has
+> no cases, so it earns no credit for detection we never tested.
+>
+> **The block-vs-warn ladder is ours, not theirs.** It emits `is_safe` plus a severity and
+> takes no position on blocking; mapping `HIGH`/`CRITICAL`→block and `MEDIUM`/`LOW`→warn is
+> the adapter's choice and moves `exact-action` alone.
+>
+> Full detail and reproduction: [`adapters/cisco/README.md`](adapters/cisco/README.md).
+
+### The floor, and what it exposes about this corpus
+
+[`adapters/naive/adapter.mjs`](adapters/naive/adapter.mjs) is not a guard. It is eight
+verbatim phrases and `String.includes` over the raw frame — no parsing, no normalisation,
+no severity model, about thirty seconds of thought. It exists because **a score means
+nothing without a floor**, and it is scored on the full corpus so any row can be compared
+to it directly.
+
+Three things fall out of it, and two are unflattering to us:
+
+**1. mcpm's lead over the floor is real.** 44.4% → 100% recall on identical cases. Whatever
+else is true of a self-published benchmark, the reference guard is not merely
+pattern-matching the obvious.
+
+**2. The 11-case tools/list slice cannot discriminate.** Restricted to the same slice the
+Cisco adapter accepts, the naive baseline and `cisco-ai-mcp-scanner`'s YARA analyzer score
+*identically* — recall 25.0%, precision 100%, exact 45.5% — and their miss sets overlap on
+5 of 6, differing by exactly one case each (the baseline catches `multitool-poisoning` and
+misses `when-user-asks-poisoning`; YARA does the reverse). **Do not read the Cisco row as a
+measurement of that product's quality.** An 11-case slice on which a substring grep ties a
+shipping scanner is a slice too small and too easy to separate them, and the correct
+conclusion is that this corpus needs cases in that carrier that a naive matcher fails.
+
+**3. Our benign corpus does not punish naive matching.** The baseline's false-positive rate
+is **0.0%** across all 14 benign cases. A dumb substring matcher should be tripping on
+legitimate prose that discusses prompt injection, security documentation quoting attack
+strings, i18n text, and tool descriptions that legitimately mention system prompts. That it
+does not means the benign set is currently too easy, and every 0.0% fp-rate in the table
+above — mcpm's included — is a weaker claim than it looks. **This is the most useful
+contribution the corpus could receive right now:** benign cases adversarial enough to make
+a naive matcher fail, so that a real guard's zero means something.
+
+We would rather publish a floor that embarrasses our own corpus than a scoreboard that
+flatters it.
 
 **The 0.26.3 row is kept deliberately.** Corpus v2 added three cases —
 `exfil-param-in-schema`, `credential-phishing-wallet-solicitation`,
@@ -88,8 +156,21 @@ three detectors through one shared composition and restores 27/27 detections.
 Both runs exit 0 — a low score has never failed CI here, and now that rule has
 been exercised rather than assumed.
 
-This table still has exactly one guard in it. That is the honest state of the
-field right now, and the most useful contribution is a second row.
+**What the second row actually taught us**, which was not what we expected: the hard part
+of scoring a second guard was not detection quality, it was that guards do not agree on
+what an input *is*. Every MCP-aware scanner we surveyed accepts tools/list-carried content
+and nothing else. Without a way to say "this carrier is outside what I claim to inspect,"
+those 30 cases would have been scored as misses — manufacturing a false negative against a
+tool that never claimed to look there — or crashed the run outright. So the runner grew an
+`unsupported` action before the row could be published honestly.
+
+That is a benchmark-design result, not an mcpm result, and it generalizes: **a scoreboard
+that cannot distinguish "did not detect" from "does not accept" measures scope and reports
+it as capability.** Any guard whose input surface differs from mcpm's would have been
+scored unfairly by the previous runner, including guards better than mcpm.
+
+Two rows is still a thin field, and one of them is a partial-scope row. More adapters
+remain the most useful contribution.
 
 See [`adapters/README.md`](adapters/README.md) for the adapter contract.
 
@@ -129,6 +210,27 @@ that drops the cases it would fail otherwise reports a clean 100%; that is the
 failure mode that quietly overstates a guard, and it is why an unhealthy run is
 the one thing that fails CI.
 
+`coverage` splits three ways, and the distinction is load-bearing:
+
+- **`scored`** — the guard returned a verdict and it counted.
+- **`unsupported`** — the guard *answered*, declining the carrier as outside the input
+  surface it claims. This is an **abstention, not a verdict and not a failure.** It is
+  excluded from every rate in both directions: it is neither a miss nor a clean pass.
+  Scoring an abstention as a miss measures scope and calls it capability; scoring it as a
+  pass hands out credit for work not done.
+- **`missingVerdict` / `adapterErrors`** — the guard was asked and did not answer. These
+  are health problems and they fail CI.
+
+`answered = scored + unsupported`. A run where `answered` is less than the corpus is
+unhealthy; a run where `scored` is less than `answered` is merely **partial scope**, and
+its rates describe only the slice it accepted. `scoredFraction` tells you how big that
+slice was — read it before comparing two guards' numbers to each other.
+
+**Abstention is self-reported and unverified.** A guard could abstain its way to a
+flattering slice. That is why `scoredFraction` sits next to every rate and why the
+markdown lists each abstained case with the reason the adapter gave: the claim is
+auditable even though it is not enforced.
+
 A note on two different counts of the same corpus: the scoreboard's
 "expected-detection" figure is **27** — the 24 `attacks/` cases *plus* the 3
 `warn/` cases, since both must be flagged. The bucket split is printed alongside
@@ -148,13 +250,23 @@ file-ingestion scope.
 
 ## Contributing
 
-Two contributions matter most:
+Three contributions matter most, and the first is new — it comes from what the naive
+baseline exposed above:
 
-1. **An adapter for another guard.** Implement the stdio contract in any
+1. **A benign case that a naive substring matcher gets wrong.** The floor currently scores
+   **0.0% false-positive rate** on our benign set, which means the set is not testing
+   false-positive resistance at all, and every 0.0% in the baseline table is softer than it
+   reads. Realistic traffic that *looks* like an attack — security documentation quoting
+   injection strings, a tool that legitimately manipulates SSH config, i18n prose, a
+   changelog describing a CVE — is worth more to this benchmark right now than another
+   attack case.
+2. **An adapter for another guard.** Implement the stdio contract in any
    language — see [`adapters/README.md`](adapters/README.md). The only rule is
    that it must drive the guard's own published artifact (CLI or public library
-   API), never a vendored copy of its internals.
-2. **A case the reference guard misses.** That is the point of the exercise, and
+   API), never a vendored copy of its internals. If your guard only accepts some
+   carriers, return `unsupported` for the rest rather than guessing — abstentions are
+   excluded from the rates, not counted against you.
+3. **A case the reference guard misses.** That is the point of the exercise, and
    CI will not fail for it. Include a `source` field citing the public
    methodology or writeup the case comes from — every case has to be traceable
    to a real technique, not invented to pad a score.

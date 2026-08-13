@@ -39,9 +39,9 @@ stick: versioned cases, an open schema, a language-agnostic runner, a scoreboard
 
 ```bash
 # score the reference guard through a pinned published mcpm (no install needed)
-MCPM_CMD="npx --yes @getmcpm/cli@0.27.0 guard inspect --json" \
-  node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.27.0
-# → out/scoreboard-mcpm@0.27.0-<date>.md
+MCPM_CMD="npx --yes @getmcpm/cli@0.29.0 guard inspect --json" \
+  node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.29.0
+# → out/scoreboard-mcpm@0.29.0-<date>.md
 
 # or whatever `mcpm` is already on your PATH
 npm run bench:mcpm
@@ -64,6 +64,7 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage |
 |---|---|---|---|---|---|
+| `@getmcpm/cli@0.29.0` | 100.0% | 0.0% | 100.0% | 100.0% | 47/47 |
 | `@getmcpm/cli@0.28.0` | 100.0% | 0.0% | 100.0% | 100.0% | 47/47 |
 | `@getmcpm/cli@0.27.0` | 100.0% | 0.0% | 100.0% | 100.0% | 47/47 |
 | `@getmcpm/cli@0.26.3` | 88.9% | 0.0% | 100.0% | 93.6% | 47/47 |
@@ -75,7 +76,7 @@ through `mcp-scanner static`. Every guard is driven by its own published CLI.
 
 **Corpus v3 (47 cases)** adds six benign cases written to break a substring matcher — see
 [the floor](#the-floor-and-what-it-exposes-about-this-corpus) below. They are the first
-cases here **not** extracted from mcpm's fixtures, and they moved three of the five rows.
+cases here **not** extracted from mcpm's fixtures, and they moved three of the five rows that existed then.
 Every row above was re-measured on v3; none is carried over from a smaller corpus.
 
 > ### ⚠ The Cisco row is not comparable to the mcpm rows. Read this before quoting it.

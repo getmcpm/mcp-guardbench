@@ -70,6 +70,11 @@ arrived. Recall was never tied: 37.5% vs 25.0% on both corpora.
 fp-rate moved because the corpus gained adversarial benign cases, **not** because the
 scanner changed.
 
+**Corpus v4 (54 cases, 2026-08-23):** unchanged on this scanner. All seven new cases
+(real-CVE-derived, none tools/list-shaped) abstain the same way the other 32 do — scored
+15/54, abstained 39, recall/fp-rate/precision/exact-action identical to the v3 row above.
+`static`'s input surface simply does not reach any of the seven.
+
 ## Two behaviours any future adapter author must know
 
 **Exit codes are not a verdict channel.** Measured: the scanner exits **0** on a HIGH

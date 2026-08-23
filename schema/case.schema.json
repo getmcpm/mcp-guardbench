@@ -72,9 +72,10 @@
     "provenance": {
       "enum": [
         "extracted",
-        "native"
+        "native",
+        "external"
       ],
-      "description": "Where the case came from. 'extracted' = derived from @getmcpm/cli's guard fixtures (default when absent, which predates this field). 'native' = hand-authored in this repo against no guard's implementation."
+      "description": "Where the case came from. 'extracted' = derived from @getmcpm/cli's guard fixtures (default when absent, which predates this field). 'native' = hand-authored in this repo against no guard's implementation. 'external' = derived from a real, publicly disclosed vulnerability (a CVE/GHSA advisory) in a third-party MCP server or client, independent of any guard's fixtures or this repo's own authorship — the `source` field cites the CVE/GHSA and the exact vulnerable commit/tag."
     }
   }
 }

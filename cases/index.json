@@ -7,9 +7,13 @@
     "native": {
       "from": "hand-authored in mcp-guardbench",
       "count": 6
+    },
+    "external": {
+      "from": "real, publicly disclosed CVEs (see each case's `source` field)",
+      "count": 7
     }
   },
-  "count": 47,
+  "count": 54,
   "cases": [
     {
       "id": "credential-egress-github-pat",
@@ -38,6 +42,55 @@
       "category": "MCP-CREDENTIAL-PHISHING",
       "expected": "block",
       "provenance": "extracted"
+    },
+    {
+      "id": "cve-2025-53818-github-kanban-mcp-command-injection",
+      "bucket": "attacks",
+      "category": "MCP-COMMAND-INJECTION",
+      "expected": "block",
+      "provenance": "external"
+    },
+    {
+      "id": "cve-2025-68669-5ire-mermaid-onerror-injection",
+      "bucket": "attacks",
+      "category": "MCP-CODE-INJECTION",
+      "expected": "block",
+      "provenance": "external"
+    },
+    {
+      "id": "cve-2026-22793-5ire-echarts-markdown-code-injection",
+      "bucket": "attacks",
+      "category": "MCP-CODE-INJECTION",
+      "expected": "block",
+      "provenance": "external"
+    },
+    {
+      "id": "cve-2026-25546-godot-mcp-command-injection",
+      "bucket": "attacks",
+      "category": "MCP-COMMAND-INJECTION",
+      "expected": "block",
+      "provenance": "external"
+    },
+    {
+      "id": "cve-2026-25650-mcp-salesforce-token-disclosure",
+      "bucket": "attacks",
+      "category": "MCP-CREDENTIAL-EXFIL",
+      "expected": "warn",
+      "provenance": "external"
+    },
+    {
+      "id": "cve-2026-33980-adx-mcp-kql-injection",
+      "bucket": "attacks",
+      "category": "MCP-QUERY-INJECTION",
+      "expected": "block",
+      "provenance": "external"
+    },
+    {
+      "id": "cve-2026-39884-mcp-server-kubernetes-argument-injection",
+      "bucket": "attacks",
+      "category": "MCP-ARGUMENT-INJECTION",
+      "expected": "block",
+      "provenance": "external"
     },
     {
       "id": "exfil-param-in-schema",

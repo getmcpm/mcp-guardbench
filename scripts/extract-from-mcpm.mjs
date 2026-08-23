@@ -71,15 +71,21 @@ for (const bucket of BUCKETS) {
     });
   }
 }
+// Counted per actual provenance value, not derived as "everything else" from a
+// single native count — that shape silently mislabelled every future
+// provenance value (e.g. 'external') as 'extracted' the moment one was added.
 const nativeCount = index.filter((c) => c.provenance === "native").length;
+const externalCount = index.filter((c) => c.provenance === "external").length;
+const extractedCount2 = index.length - nativeCount - externalCount;
 
 writeFileSync(
   path.join(OUT, "index.json"),
   JSON.stringify(
     {
       sources: {
-        extracted: { from: "@getmcpm/cli guard fixture corpus", count: index.length - nativeCount },
+        extracted: { from: "@getmcpm/cli guard fixture corpus", count: extractedCount2 },
         native: { from: "hand-authored in mcp-guardbench", count: nativeCount },
+        external: { from: "real, publicly disclosed CVEs (see each case's `source` field)", count: externalCount },
       },
       count: index.length,
       cases: index,

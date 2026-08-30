@@ -64,6 +64,7 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage |
 |---|---|---|---|---|---|
+| `@getmcpm/cli@0.32.0` | 94.1% | 0.0% | 100.0% | 92.6% | 54/54 |
 | `@getmcpm/cli@0.30.0` | 82.3% | 0.0% | 100.0% | 87.0% | 54/54 |
 | `@getmcpm/cli@0.29.0` | 82.3% | 0.0% | 100.0% | 87.0% | 54/54 |
 | `@getmcpm/cli@0.28.0` | 82.3% | 0.0% | 100.0% | 87.0% | 54/54 |
@@ -239,6 +240,40 @@ credential-phishing solicitation, exfil-shaped schema params, prefix-anchored cr
 leakage) are unaffected. It is the plainest demonstration yet of why corpus provenance
 matters: a benchmark that only contains what its own reference guard already catches
 measures nothing, and the honest number here is 82.3%, not 100%.
+
+**Update, measured 2026-08-30 against `@getmcpm/cli@0.32.0`**
+(`MCPM_CMD="npx --yes @getmcpm/cli@0.32.0 guard inspect --json" node runner/run.mjs
+--adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.32.0`): recall on this corpus
+rises to **94.1%** (32/34), closing 4 of the 6 misses above. `mcpm guard list-signatures`
+shows why: the new `shell-metachar-in-identifier-arg` and
+`query-control-syntax-in-identifier-arg` signatures (closing CVE-2025-53818/CVE-2026-25546
+and CVE-2026-33980 respectively) now catch the godot-mcp command-injection and adx-mcp
+KQL-injection cases, and a new `renderer-code-execution-in-response` signature
+(CVE-2025-68669/CVE-2026-22793 shape) catches both 5ire code-injection cases.
+
+Two misses remain, and both are **documented, accepted gaps in the shipped detector, not
+oversights** — read directly from `@getmcpm/cli`'s own source comments:
+
+- `cve-2026-39884-mcp-server-kubernetes-argument-injection` — a new
+  `cli-flag-injection-in-identifier-arg` signature exists for exactly this CVE shape, but a
+  pre-merge adversarial review (per the source comment) found the CVE's own vulnerable key
+  (`resourceName`) produces real false positives — ticket titles, freeform ops tags — and
+  scoped the detector to `namespace`/`id`/`identifier`/`uuid`/`slug` keys only. This case,
+  like the advisory's own PoC, carries the payload in `resourceName`, which is deliberately
+  out of scope; filed as TODOS #57 in the source.
+- `cve-2026-25650-mcp-salesforce-token-disclosure` — the new
+  `generic-bearer-token-disclosure` signature (TODOS #53) requires 20+ contiguous token
+  characters immediately after `Bearer `, and the Salesforce session-token format this CVE
+  discloses (`<org-id>!<signature>`) contains a `!` that breaks the match after 17
+  characters. An earlier version of the pattern added `!` to the allowed character class to
+  catch this exact shape; a pre-merge review measured that widening, found it false-positives
+  on webpack's loader-chaining syntax and on Salesforce's own documentation describing the
+  token format, and reverted it. The CVE's own literal PoC token is a documented, accepted
+  miss.
+
+Both gaps are stated plainly in the cli's own source rather than silently absorbed, which is
+the same discipline this benchmark exists to reward. The 0.30.0 row above is kept, not
+erased — see [Current baseline](#current-baseline).
 
 **What the second row actually taught us**, which was not what we expected: the hard part
 of scoring a second guard was not detection quality, it was that guards do not agree on

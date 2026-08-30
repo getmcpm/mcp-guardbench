@@ -1,12 +1,19 @@
 # mcp-guardbench
 
-**A guard-agnostic benchmark for MCP injection / exfil / tool-poisoning detection.**
+**A reproducible, CI-native guard-vs-guard scoreboard for MCP: every guard scored
+through its own published CLI, against a versioned corpus with a
+zero-false-positive benign set.**
 
-A corpus of MCP JSON-RPC frames — attacks that a guard *should* flag and benign
-traffic it *must not* — plus a runner that scores **any** guard, relay, or
-client-side inspector through a simple stdio contract. mcpm ships as the
-reference implementation; the point is that anyone can write an adapter and
-compare.
+Guard vendors self-report their own numbers on their own test data, with no way
+for anyone outside the project to check them. mcp-guardbench is that check: a
+versioned corpus of MCP JSON-RPC frames — attacks a guard *should* flag, and a
+benign set curated to trip up sloppy pattern-matching while never triggering a
+well-built one — plus a language-agnostic runner that drives **any** guard,
+relay, or client-side inspector through the real artifact its own users run
+(published CLI or library API), never a vendored copy of its internals. mcpm
+ships as the reference implementation, but the corpus and runner are
+guard-agnostic by design; the point is that anyone can write an adapter, run it
+in their own CI, and compare.
 
 > **Conflict of interest, stated up front.** This corpus was extracted from
 > [`@getmcpm/cli`](https://github.com/getmcpm/cli)'s guard fixtures, and it is
@@ -33,7 +40,18 @@ The serious MCP attacks — tool-description poisoning, rug-pulls, response
 injection, credential phishing, context exfiltration — happen in **runtime
 JSON-RPC traffic**. There is no shared, reproducible measuring stick for whether
 a given guard actually catches them. Vendors self-report. This corpus is that
-stick: versioned cases, an open schema, a language-agnostic runner, a scoreboard.
+stick: versioned cases, an open schema, a language-agnostic runner, a scoreboard
+anyone can reproduce from a clean clone, in CI, on every commit.
+
+**If you want scale, not reproducibility.** This corpus is deliberately small
+(54 cases) and hand-curated so every case's provenance and expected verdict can
+be checked by a human — that is a corpus-size trade, not a claim that 54 cases
+is enough attack surface. For large attack corpora built from real MCP
+servers, see [MCPTox](https://arxiv.org/abs/2508.14925) (1,312 cases across 45
+real-world MCP servers) or [MCPSecBench](https://arxiv.org/abs/2508.13220) (17
+attack types across four attack surfaces). This benchmark's job is a narrower
+one: reproducible, CI-gradable comparison of shipped guards against each other
+and against their own past releases — not corpus scale.
 
 ## Quickstart
 

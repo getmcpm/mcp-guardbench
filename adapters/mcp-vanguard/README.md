@@ -68,3 +68,23 @@ The recall/coverage numbers above are **not comparable to the 2026-08-23
 
 Full breakdown (by category, misses, carrier coverage) in
 `out/scoreboard-mcp-vanguard@2.2.1-*.md`.
+
+## Result, 2026-08-30 — `mcp-vanguard@2.2.1`, `--profile strict`, corpus v5
+
+Scored 29/56 · abstained 27 · recall **26.3%** · fp-rate **0.0%** · precision
+**100.0%** · exact-action 44.8% · 0 anomalies.
+
+Corpus v5 added two `native` cases derived from Pillar Security's Deadbugz
+disclosure (a poisoned `tools/list` description and a poisoned `prompts/get`
+message; see the main README's Corpus v5 section). The two land on opposite
+sides of this adapter's coverage boundary: `deadbugz-post-flip-tool-description-poisoning`
+is **scored and missed** — `metadata_tool_list` reads `result.tools` and does
+not flag the added exfil sentence, a real detection gap, not an abstention —
+while `deadbugz-post-flip-prompt-exfil-instructions` **abstains**, since no
+harness here reads `result.messages` (the `prompts/get` channel is entirely
+outside this adapter's scored surface, same as `result.content`/`result.contents`
+above). The recall/coverage numbers above are **not comparable to the
+2026-08-30 27.8%/28-of-54 figure** — different corpus, different denominator.
+
+Full breakdown (by category, misses, carrier coverage) in
+`out/scoreboard-mcp-vanguard@2.2.1-*.md`.

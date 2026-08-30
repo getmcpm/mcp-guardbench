@@ -44,8 +44,8 @@ stick: versioned cases, an open schema, a language-agnostic runner, a scoreboard
 anyone can reproduce from a clean clone, in CI, on every commit.
 
 **If you want scale, not reproducibility.** This corpus is deliberately small
-(54 cases) and hand-curated so every case's provenance and expected verdict can
-be checked by a human — that is a corpus-size trade, not a claim that 54 cases
+(56 cases) and hand-curated so every case's provenance and expected verdict can
+be checked by a human — that is a corpus-size trade, not a claim that 56 cases
 is enough attack surface. For large attack corpora built from real MCP
 servers, see [MCPTox](https://arxiv.org/abs/2508.14925) (1,312 cases across 45
 real-world MCP servers) or [MCPSecBench](https://arxiv.org/abs/2508.13220) (17
@@ -80,21 +80,26 @@ low score.**
 
 ### Current baseline
 
-| guard | recall | fp-rate | precision | exact-action | coverage |
-|---|---|---|---|---|---|
-| `@getmcpm/cli@0.32.0` | 94.1% | 0.0% | 100.0% | 92.6% | 54/54 |
-| `@getmcpm/cli@0.30.0` | 82.3% | 0.0% | 100.0% | 87.0% | 54/54 |
-| `@getmcpm/cli@0.29.0` | 82.3% | 0.0% | 100.0% | 87.0% | 54/54 |
-| `@getmcpm/cli@0.28.0` | 82.3% | 0.0% | 100.0% | 87.0% | 54/54 |
-| `@getmcpm/cli@0.27.0` | 82.3% | 0.0% | 100.0% | 87.0% | 54/54 |
-| `@getmcpm/cli@0.26.3` | 73.5% | 0.0% | 100.0% | 81.5% | 54/54 |
-| `cisco-ai-mcp-scanner@4.8.2` ⚠ YARA only | 25.0% | 28.6% | 50.0% | 46.7% | **15/54** |
-| `mcp-vanguard@2.2.1` ⚠ partial scope | 27.8% | 0.0% | 100.0% | 46.4% | **28/54** |
-| *naive baseline (substring match)* | 38.2% | 30.0% | 68.4% | 40.7% | 54/54 |
+| guard | recall | fp-rate | precision | exact-action | coverage | corpus |
+|---|---|---|---|---|---|---|
+| `@getmcpm/cli@0.32.0` | 88.9% | 0.0% | 100.0% | 89.3% | 56/56 | v5 |
+| `mcp-vanguard@2.2.1` ⚠ partial scope | 26.3% | 0.0% | 100.0% | 44.8% | **29/56** | v5 |
+| `@getmcpm/cli@0.32.0` | 94.1% | 0.0% | 100.0% | 92.6% | 54/54 | v4 |
+| `@getmcpm/cli@0.30.0` | 82.3% | 0.0% | 100.0% | 87.0% | 54/54 | v4 |
+| `@getmcpm/cli@0.29.0` | 82.3% | 0.0% | 100.0% | 87.0% | 54/54 | v4 |
+| `@getmcpm/cli@0.28.0` | 82.3% | 0.0% | 100.0% | 87.0% | 54/54 | v4 |
+| `@getmcpm/cli@0.27.0` | 82.3% | 0.0% | 100.0% | 87.0% | 54/54 | v4 |
+| `@getmcpm/cli@0.26.3` | 73.5% | 0.0% | 100.0% | 81.5% | 54/54 | v4 |
+| `cisco-ai-mcp-scanner@4.8.2` ⚠ YARA only | 25.0% | 28.6% | 50.0% | 46.7% | **15/54** | v4 |
+| `mcp-vanguard@2.2.1` ⚠ partial scope | 27.8% | 0.0% | 100.0% | 46.4% | **28/54** | v4 |
+| *naive baseline (substring match)* | 38.2% | 30.0% | 68.4% | 40.7% | 54/54 | v4 |
 
 mcpm rows measured through `npx @getmcpm/cli@<version> guard inspect --json`; the Cisco row
-through `mcp-scanner static`; the McpVanguard row through `vanguard benchmark-run
---json-output --profile strict`. Every guard is driven by its own published CLI.
+through `mcp-scanner static`; the McpVanguard rows through `vanguard benchmark-run
+--json-output --profile strict`. Every guard is driven by its own published CLI. The two v5
+rows are the only ones measured on the current 56-case corpus (2026-08-30); Cisco and the
+naive baseline were not re-run this cycle and are shown at their last-measured v4 numbers —
+see [Corpus v5](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz) below.
 
 **Corpus v4 (54 cases)** adds seven cases derived from real, publicly disclosed CVEs in
 third-party MCP servers and clients — github-kanban-mcp-server, godot-mcp,
@@ -104,8 +109,9 @@ are the first `external`-provenance cases: not extracted from mcpm's fixtures, a
 hand-authored by this project either. `@getmcpm/cli`'s recall drops from **100.0%** on
 the clean 47-case v3 corpus to **82.3%** here — it misses 6 of the 7, plus one detected
 only by an unrelated signature (see [the CVE-10 gap](#corpus-v4---seven-real-cves-the-reference-guard-mostly-misses)
-below). Every row above was re-measured on v4; none is carried over from a smaller
-corpus.
+below). Every v4 row above was re-measured on v4 when it shipped; none was carried over
+from a smaller corpus. (The two v5 rows above them are a later addition — see
+[Corpus v5](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz) below.)
 
 > ### ⚠ The Cisco row is not comparable to the mcpm rows. Read this before quoting it.
 >
@@ -336,9 +342,52 @@ remain the most useful contribution.
 
 See [`adapters/README.md`](adapters/README.md) for the adapter contract.
 
+### Corpus v5 - the first live in-the-wild campaign case (Deadbugz)
+
+Corpus v5 adds two `native` cases derived from Pillar Security's disclosure of "Deadbugz,"
+an active MCP supply-chain campaign (2026-08, published 2026-08-12): a server that stays
+benign for the first three `tools/call` requests via an in-memory per-client counter, then
+flips its `tools/list` and `prompts/get` responses to solicit SSH keys, AWS credentials,
+shell history, and Kubernetes config while concealing the activity. These are the first
+native cases sourced from a real, currently active campaign rather than hand-invented —
+`cases/attacks/deadbugz-post-flip-tool-description-poisoning.json` and
+`cases/warn/deadbugz-post-flip-prompt-exfil-instructions.json` are both single-frame
+detection slices of that stateful mechanism (the POST-FLIP frame alone, with no prior
+session state); the 3-call trigger itself is not single-frame-expressible and is out of
+this corpus's v1 scope, so it is instead reproduced and measured directly against
+`@getmcpm/cli` in that repo's `src/guard/__tests__/deadbugz.test.ts`. Each case's `source`
+field carries the full detail.
+
+**Measured 2026-08-30 against `@getmcpm/cli@0.32.0`**
+(`MCPM_CMD="npx --yes @getmcpm/cli@0.32.0 guard inspect --json" node runner/run.mjs
+--adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.32.0`): recall on the 56-case
+corpus is **88.9%** (32/36), down from 94.1% (32/34) on v4 — both new cases score a MISS
+(`pass`, zero findings). Neither reconstructed wording matches any of the four regex
+shapes behind `owasp-mcp-1-tool-description-injection` or
+`owasp-mcp-2-instruction-injection-in-prompt`: a tool description that *adds* a hidden
+data-collection step reads nothing like a system-prompt-override attempt, and the same is
+true of the `prompts/get` instruction text. These are cases the reference guard currently
+misses, not cases it is known to catch — consistent with this project's own rule that a
+benchmark whose author always scores 100% is measuring nothing. fp-rate stays 0.0%,
+precision 100.0%.
+
+**Measured 2026-08-30 against `mcp-vanguard@2.2.1`** (`--profile strict`, fresh isolated
+venv install): scored 29/56 (up from 28/54), recall **26.3%** (down from 27.8% on v4). The
+two new cases split across vanguard's coverage boundary in a way worth reading directly: it
+**scores and misses** `deadbugz-post-flip-tool-description-poisoning` (its
+`metadata_tool_list` harness reads `result.tools` and does not flag the added exfil
+sentence — a real detection miss, not an abstention), but it **abstains entirely** on
+`deadbugz-post-flip-prompt-exfil-instructions` (no harness reads `result.messages`, so it
+never sees the `prompts/get` channel at all). A metadata-poisoning-focused inspector and
+mcpm's regex-based one land on the same two cases for different reasons — one misses by
+inspecting and not matching, the other misses by never looking.
+
+Cisco and the naive substring baseline were not re-run this cycle (both require separate
+setup this pass didn't repeat) and keep their v4/54-case rows in the table above.
+
 ## Corpus
 
-54 single-frame cases today (31 attack, 20 benign, 3 warn-and-forward), each in
+56 single-frame cases today (32 attack, 20 benign, 4 warn-and-forward), each in
 [`schema/case.schema.json`](schema/case.schema.json):
 
 | bucket | must | maps to |
@@ -351,19 +400,25 @@ Provenance is **mixed, and each case says which it is.** 41 cases carry
 `"provenance": "extracted"` (or no field, which predates the distinction): they come from
 `@getmcpm/cli`'s hand-authored guard fixtures, which derive from **public** attack
 methodology (Invariant Labs 2025, MCPoison CVE-2025-54136, Equixly/Pillar audits).
-License-clean — no MCPTox artifacts copied. Six carry `"provenance": "native"`: written
+License-clean — no MCPTox artifacts copied. Eight carry `"provenance": "native"`: written
 here, against no guard's implementation, because **a corpus extracted from one guard's
 fixtures cannot grow in a direction that guard cannot see** — the failure this project
-exists to make visible. Seven carry `"provenance": "external"`: derived from real,
-publicly disclosed CVEs in third-party MCP servers/clients, rebuilt from public NVD/GHSA
-data — see [Corpus v4](#corpus-v4---seven-real-cves-the-reference-guard-mostly-misses)
-above. `cases/index.json` counts all three.
+exists to make visible. Two of those eight are the first native cases derived from a live
+in-the-wild campaign rather than an invented scenario — Pillar Security's Deadbugz
+disclosure (2026-08-12), single-frame detection slices of a stateful attack; see
+[Corpus v5](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz) below. Seven
+carry `"provenance": "external"`: derived from real, publicly disclosed CVEs in
+third-party MCP servers/clients, rebuilt from public NVD/GHSA data — see
+[Corpus v4](#corpus-v4---seven-real-cves-the-reference-guard-mostly-misses) above.
+`cases/index.json` counts all three.
 ⚠ **The corpus is deliberately pinned behind upstream, and re-extracting will change it.**
 Corpus v4 = `@getmcpm/cli`'s fixtures as of **v0.28.0's release** (41 cases), plus the six
-native cases, plus the seven external CVE cases. Upstream has since grown to 55
-single-frame fixtures; the extraction script preserves native/external cases (it only
-overwrites fixture-derived ones), so running the command below today yields **68** cases
-(55 + 6 + 7) and every published number above stops applying. The 14 extra fixture cases
+native cases it had at the time, plus the seven external CVE cases. Corpus v5 added two
+more native cases by hand (see [Corpus v5](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz)
+above), for eight native cases today. Upstream has since grown to 55 single-frame
+fixtures; the extraction script preserves native/external cases (it only overwrites
+fixture-derived ones), so running the command below today yields **70** cases (55 + 8 + 7)
+and every published number above stops applying. The 14 extra fixture cases
 are held back on purpose: nine are TAG-block attacks added when mcpm shipped that
 coverage, and importing a family the reference guard had just fixed would inflate its
 lead by construction. Taking them is a corpus-balance decision that has to come with a
@@ -413,7 +468,7 @@ markdown lists each abstained case with the reason the adapter gave: the claim i
 auditable even though it is not enforced.
 
 A note on two different counts of the same corpus: the scoreboard's
-"expected-detection" figure is **34** — the 31 `attacks/` cases *plus* the 3
+"expected-detection" figure is **36** — the 32 `attacks/` cases *plus* the 4
 `warn/` cases, since both must be flagged. The bucket split is printed alongside
 it so the two never appear to disagree.
 
@@ -421,8 +476,9 @@ Where the reference guard scores well, treat it as **construction, not evidence*
 — the corpus began as its own test suite. Real signal comes from scoring *other*
 guards, and from adding cases the reference guard misses. Corpus v2 did exactly
 the latter and dropped mcpm's published recall to 88.9%; corpus v4 did it again with
-seven real-CVE cases and dropped it to 82.3%. A benchmark whose author always scores
-100% is measuring nothing.
+seven real-CVE cases and dropped it to 82.3%; corpus v5 dropped it again, from 94.1%
+back to 88.9%, with two cases derived from a live in-the-wild campaign. A benchmark
+whose author always scores 100% is measuring nothing.
 
 ## ⚠ Handling
 

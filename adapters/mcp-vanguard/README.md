@@ -54,10 +54,17 @@ loads its corpus with `yaml.safe_load`, and JSON is a syntactic subset of
 YAML — verified by execution. Case batches are therefore written as plain
 JSON with a `.yaml` extension rather than hand-rolling a YAML serializer.
 
-## Result, 2026-08-23 — `mcp-vanguard@2.2.1`, `--profile strict`, corpus v3
+## Result, 2026-08-30 — `mcp-vanguard@2.2.1`, `--profile strict`, corpus v4
 
-Scored 25/48 · abstained 23 · recall **33.3%** · fp-rate **0.0%** · precision
-**100.0%** · exact-action 52.0% · 0 anomalies.
+Scored 28/54 · abstained 26 · recall **27.8%** · fp-rate **0.0%** · precision
+**100.0%** · exact-action 46.4% · 0 anomalies.
+
+Corpus v4 added seven CVE-derived attack cases since the previous 2026-08-23
+run (corpus v3, 48 cases); this guard misses all four of the new cases its
+`rules_engine`/`tools/call` carrier covers (`cve-2025-53818`, `cve-2026-25546`,
+`cve-2026-33980`, `cve-2026-39884`) and abstains on the rest, same as before.
+The recall/coverage numbers above are **not comparable to the 2026-08-23
+33.3%/25-of-48 figure** — different corpus, different denominator.
 
 Full breakdown (by category, misses, carrier coverage) in
-`out/scoreboard-mcp-vanguard@2.2.1-strict-*.md`.
+`out/scoreboard-mcp-vanguard@2.2.1-*.md`.

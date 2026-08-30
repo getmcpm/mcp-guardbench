@@ -71,10 +71,12 @@ low score.**
 | `@getmcpm/cli@0.27.0` | 82.3% | 0.0% | 100.0% | 87.0% | 54/54 |
 | `@getmcpm/cli@0.26.3` | 73.5% | 0.0% | 100.0% | 81.5% | 54/54 |
 | `cisco-ai-mcp-scanner@4.8.2` ⚠ YARA only | 25.0% | 28.6% | 50.0% | 46.7% | **15/54** |
+| `mcp-vanguard@2.2.1` ⚠ partial scope | 27.8% | 0.0% | 100.0% | 46.4% | **28/54** |
 | *naive baseline (substring match)* | 38.2% | 30.0% | 68.4% | 40.7% | 54/54 |
 
 mcpm rows measured through `npx @getmcpm/cli@<version> guard inspect --json`; the Cisco row
-through `mcp-scanner static`. Every guard is driven by its own published CLI.
+through `mcp-scanner static`; the McpVanguard row through `vanguard benchmark-run
+--json-output --profile strict`. Every guard is driven by its own published CLI.
 
 **Corpus v4 (54 cases)** adds seven cases derived from real, publicly disclosed CVEs in
 third-party MCP servers and clients — github-kanban-mcp-server, godot-mcp,
@@ -129,6 +131,29 @@ corpus.
 > the adapter's choice and moves `exact-action` alone.
 >
 > Full detail and reproduction: [`adapters/cisco/README.md`](adapters/cisco/README.md).
+
+> ### ⚠ The McpVanguard row is not comparable to the mcpm rows either. Read this before quoting it.
+>
+> **It scored 28 of 54 (52%) — the smallest scored slice in this table.** `vanguard
+> benchmark-run` evaluates each case through exactly ONE named harness, read directly from
+> source: `rules_engine` reads `message.params` (so it sees `tools/call` requests and,
+> incidentally, server-initiated `elicitation/create`/`sampling/createMessage`), and
+> `metadata_tool_list`/`metadata_initialize` read `message.result.{tools,instructions}`.
+> There is no harness that inspects arbitrary tool-response or resource-content text —
+> `behavioral_response` exists but only measures response *size*, not content — so all 21
+> `result.content` cases and all 4 `result.contents` cases abstain. That is most of this
+> corpus's credential-egress and response-injection coverage.
+>
+> **It is one layer, not the composed proxy.** McpVanguard's real deployment is `vanguard
+> start --server "<cmd>"`, a live stdio MITM wrapping the upstream server; this adapter
+> drives the offline benchmark harness instead, so the semantic (Ollama) and behavioral
+> layers are not exercised here at all — a real deployment could catch more, or less.
+>
+> **Two of its 15 misses are the opposite failure**: `owasp-mcp-7-aws-credentials` and
+> `owasp-mcp-7-ssh-key-exfil` are warn-and-forward cases it BLOCKED outright — real signal
+> (it saw something), wrong action, and both cost it on `exact-action` rather than recall.
+>
+> Full detail and reproduction: [`adapters/mcp-vanguard/README.md`](adapters/mcp-vanguard/README.md).
 
 ### The floor, and what it exposes about this corpus
 
@@ -288,7 +313,7 @@ that cannot distinguish "did not detect" from "does not accept" measures scope a
 it as capability.** Any guard whose input surface differs from mcpm's would have been
 scored unfairly by the previous runner, including guards better than mcpm.
 
-Two rows is still a thin field, and one of them is a partial-scope row. More adapters
+Three rows is still a thin field, and two of them are partial-scope rows. More adapters
 remain the most useful contribution.
 
 See [`adapters/README.md`](adapters/README.md) for the adapter contract.

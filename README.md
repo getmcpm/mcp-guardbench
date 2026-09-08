@@ -82,6 +82,7 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage | corpus |
 |---|---|---|---|---|---|---|
+| `@getmcpm/cli@0.38.0` | 88.9% | 0.0% | 100.0% | 89.3% | 56/56 | v5 |
 | `@getmcpm/cli@0.32.0` | 88.9% | 0.0% | 100.0% | 89.3% | 56/56 | v5 |
 | `mcp-vanguard@2.2.1` ⚠ partial scope | 26.3% | 0.0% | 100.0% | 44.8% | **29/56** | v5 |
 | `@getmcpm/cli@0.32.0` | 94.1% | 0.0% | 100.0% | 92.6% | 54/54 | v4 |
@@ -96,10 +97,11 @@ low score.**
 
 mcpm rows measured through `npx @getmcpm/cli@<version> guard inspect --json`; the Cisco row
 through `mcp-scanner static`; the McpVanguard rows through `vanguard benchmark-run
---json-output --profile strict`. Every guard is driven by its own published CLI. The two v5
-rows are the only ones measured on the current 56-case corpus (2026-08-30); Cisco and the
-naive baseline were not re-run this cycle and are shown at their last-measured v4 numbers —
-see [Corpus v5](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz) below.
+--json-output --profile strict`. Every guard is driven by its own published CLI. The three v5
+rows are the only ones measured on the current 56-case corpus (`@getmcpm/cli@0.38.0` on
+2026-09-08; the `0.32.0` and McpVanguard rows on 2026-08-30); Cisco and the naive baseline
+were not re-run this cycle and are shown at their last-measured v4 numbers — see
+[Corpus v5](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz) below.
 
 **Corpus v4 (54 cases)** adds seven cases derived from real, publicly disclosed CVEs in
 third-party MCP servers and clients — github-kanban-mcp-server, godot-mcp,
@@ -370,6 +372,19 @@ true of the `prompts/get` instruction text. These are cases the reference guard 
 misses, not cases it is known to catch — consistent with this project's own rule that a
 benchmark whose author always scores 100% is measuring nothing. fp-rate stays 0.0%,
 precision 100.0%.
+
+**Measured 2026-09-08 against `@getmcpm/cli@0.38.0`**
+(`MCPM_CMD="npx --yes @getmcpm/cli@0.38.0 guard inspect --json" node runner/run.mjs
+--adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.38.0`): recall holds at **88.9%**
+(32/36) — all four misses are identical to the 0.32.0 row above, including both Deadbugz
+cases. The stateful 3-call Deadbugz mechanism itself *is* closed on the live relay by mcpm's
+pin/drift model, and reproduced against a real session in that repo's `deadbugz.test.ts`
+(per the scope note above) — but that defense compares a frame against a previously pinned
+hash, and these two corpus cases are the single POST-FLIP frame with no prior pin to drift
+against, so it structurally cannot fire here; the frame still has to match a stateless
+signature on its own to score, and neither does. The two CVE gaps are likewise unchanged: no
+release between 0.32.0 and 0.38.0 touched the `resourceName` scoping or the Bearer-`!`
+exclusion documented above. fp-rate stays 0.0%, precision 100.0%.
 
 **Measured 2026-08-30 against `mcp-vanguard@2.2.1`** (`--profile strict`, fresh isolated
 venv install): scored 29/56 (up from 28/54), recall **26.3%** (down from 27.8% on v4). The

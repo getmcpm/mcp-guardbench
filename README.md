@@ -360,6 +360,12 @@ this corpus's v1 scope, so it is instead reproduced and measured directly agains
 `@getmcpm/cli` in that repo's `src/guard/__tests__/deadbugz.test.ts`. Each case's `source`
 field carries the full detail.
 
+See [`docs/deadbugz.md`](docs/deadbugz.md) for the frame-by-frame writeup: the exact
+commit that reproduced the miss, why it's a trust-on-first-use gap and not a regex gap,
+which of the three releases that closed it did what (and what is still open, `prompts/get`
+above all), and a five-minute reproduction against the published CLI, a real vitest
+session, and the interactive playground.
+
 **Measured 2026-08-30 against `@getmcpm/cli@0.32.0`**
 (`MCPM_CMD="npx --yes @getmcpm/cli@0.32.0 guard inspect --json" node runner/run.mjs
 --adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.32.0`): recall on the 56-case

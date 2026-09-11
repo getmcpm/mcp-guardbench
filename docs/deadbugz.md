@@ -175,6 +175,10 @@ $ pnpm install --frozen-lockfile && pnpm vitest run src/guard/__tests__/deadbugz
 (File paths and per-test timings are trimmed from the `--reporter=verbose` lines above;
 the names and their order are verbatim.)
 
+(The cli's `package.json` `engines` field requires Node `^22.22.2 || ^24.15.0 || >=26.0.0`;
+`pnpm install` does not enforce it unless `engine-strict=true` is set, so check `node --version`
+first rather than trusting a silent install.)
+
 The first test's name is not a typo: `#58 FIXED` asserts `"block"`, the closed half of
 this story. The seventh test, `GAP: mcpm has no drift/pin protection for prompts/get at
 all`, asserts a no-op — the open half, in the same file, still passing today.

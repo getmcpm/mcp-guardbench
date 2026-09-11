@@ -1,4 +1,4 @@
-# A standards-compliant `tools/list_changed` disarmed our MCP guard. Here is the frame-by-frame reproduction.
+# A standards-compliant `notifications/tools/list_changed` slipped a rug-pull past our MCP guard. Here is the frame-by-frame reproduction.
 
 ## The campaign in three sentences
 
@@ -11,12 +11,12 @@ The server keeps an in-memory per-client counter of `tools/call` requests, stays
 through the first three, and past that threshold flips its `tools/list` and `prompts/get`
 responses to steer the agent toward SSH keys, AWS credentials, shell history, and
 Kubernetes config while concealing the step from the user (same source). The post states
-the server advertises the `tools.listChanged` capability, which is what lets an
-already-connected, compliant client refresh its tool metadata and receive the poisoned
-definitions (same source) — the post documents the advertised *capability*, not a
-captured `notifications/tools/list_changed` frame; the reproduction below, built by the
-guard's own maintainers, models the server as actually sending that notification, because
-that is the only way the flip reaches a session that connected before the third call
+only that "the public code advertises tools.listChanged, which allows a compatible client
+to refresh tool metadata" — the advertised *capability*, not a captured
+`notifications/tools/list_changed` frame, and it does not say the server sends one. The
+reproduction below, built by the guard's own maintainers, models the server as actually
+sending that notification: a client that connected before the third call already fetched
+the benign list at `initialize`, so absent a re-list it goes on using it
 (getmcpm/cli@707be738:`src/guard/__tests__/deadbugz.test.ts`, docstring).
 
 ## The miss
@@ -39,8 +39,11 @@ pattern engine finds nothing on its own either: the poisoned wording *adds* a hi
 collection step to an otherwise ordinary tool description, which reads nothing like a
 system-prompt-override attempt and matches none of the four
 `owasp-mcp-1-tool-description-injection` regex shapes (same CHANGELOG entry). This is
-trust-on-first-use, not detection quality: the guard's own pin *was* the frame that had
-just poisoned it.
+trust-on-first-use, not detection quality: the benign first list *had* been captured into
+the session cache, but the armed path did not consult it, and behind it there was no disk
+pin at all — `baselineForDrift` is frozen at session start, so `pinned` is `undefined` and
+`inspectToolDrift` returns `null` before it ever tiers the change (same test file, the
+first test's inline comments).
 
 ## The fix, and why the class took three releases
 
@@ -57,8 +60,11 @@ was forwarded to the client as soon as the synchronous check passed, while the d
 write happened off-thread; a crash or kill in that gap left nothing durable, so the next
 launch "looked like *another* first session, with no baseline left to catch a swapped
 tool definition against" (getmcpm/cli `CHANGELOG.md`, `[0.34.1]`; CLAUDE.md Decisions Log,
-2026-09-01 row). The fix holds that one frame until the pin write is attempted and
-confirmed — closing a way to keep re-triggering the exact gap 0.33.0 had just closed.
+2026-09-01 row). The fix holds that one frame until the pin write has been
+attempted and either confirmed or loudly warned about (`PIN-COMMIT-UNCONFIRMED`) — so a
+server cannot keep itself permanently unpinned, which would leave every later session with
+no durable baseline and only its own first-seen frame, poisoned or not, to compare
+against.
 
 **`[0.35.0]` (2026-09-02, TODOS #58's last piece).** Both the session cache and the
 disk-pin lookup keyed a tool by its raw `name` string, so a server could re-deliver the
@@ -72,17 +78,29 @@ contains the incumbent tool, so "appending one throwaway ASCII case-variant besi
 tool removed **that tool** from drift inspection — measured, five critical blocks became
 zero and the exact Deadbugz sequence returned to `pass`" (same CHANGELOG entry).
 
-**What is still open, stated as plainly as what closed.** `prompts/get` still has no
-drift or pin mechanism today — the current test file keeps a test named `GAP: mcpm has no
-drift/pin protection for prompts/get at all`, and no commit between `[0.35.0]` and this
-writing has touched `drift.ts` or `run-inner.ts` other than an unrelated Unicode-hashing
-fix (getmcpm/cli@e583c61..HEAD, `git log -- src/guard/drift.ts src/guard/run-inner.ts`;
-current `src/guard/__tests__/deadbugz.test.ts`). And the two single-frame corpus cases
-below still score a miss at `@getmcpm/cli@0.38.0` and `0.39.1` — not because the pin/drift
-fix regressed, but because a lone post-flip frame with no prior session has nothing for a
-pin to compare against, so it falls back to the same stateless pattern engine that missed
-in 2026-08-31 and still does (measured below; `cases/attacks/deadbugz-post-flip-tool-description-poisoning.json`
-and `cases/warn/deadbugz-post-flip-prompt-exfil-instructions.json`, `source` fields).
+## What is still open
+
+Stated as plainly as what closed. **`prompts/get` still has no drift or pin mechanism.**
+The test file at `v0.39.1` keeps a test named `GAP: mcpm has no drift/pin protection for
+prompts/get at all`, and it asserts a literal no-op — `{ action: "pass", findings: [] }`.
+Between `[0.35.0]` and `v0.39.1` only two changes touch `drift.ts` or `run-inner.ts` at
+all: an unrelated NFC-hashing fix (`cc2bf0f`, shipped in `[0.36.0]`) and a one-line type
+narrowing that came with the OWASP-pin release (`[0.39.0]`, `event: string` →
+`event: ConfineEventName`). Neither adds a mechanism on this channel
+(`git log e583c61..v0.38.0 -- src/guard/drift.ts src/guard/run-inner.ts`, then a diff of
+those two files between `v0.38.0` and `v0.39.1`; `src/guard/__tests__/deadbugz.test.ts`
+at `v0.39.1`).
+
+**And the two single-frame corpus cases below still score a miss** at `@getmcpm/cli@0.38.0`
+and `0.39.1` — not because the pin/drift fix regressed, but because a lone post-flip frame
+with no prior session has nothing for a pin to compare against, so it falls back to the
+same stateless pattern engine that missed on 2026-08-31 and still does (measured below;
+`cases/attacks/deadbugz-post-flip-tool-description-poisoning.json` and
+`cases/warn/deadbugz-post-flip-prompt-exfil-instructions.json`, `source` fields).
+
+So: what is closed is the multi-frame `tools/list` flip, on the live relay, in a session
+the relay was watching. What is not closed is the `prompts/get` half of the same campaign,
+and any single frame the relay has no prior state for.
 
 ## The same frames through two guards
 
@@ -100,8 +118,11 @@ abstention. It *abstains* on `deadbugz-post-flip-prompt-exfil-instructions`: no 
 `benchmark-run` reads `result.messages`, so the `prompts/get` channel is outside its
 scored surface entirely (`adapters/mcp-vanguard/README.md`, "Result, 2026-08-30 ...
 corpus v5"). This repo's own README states the vanguard row is "not comparable to the
-mcpm rows" — it is scored through one offline harness, not vanguard's live composed
-proxy, and abstains on 27 of 56 cases (`README.md`, the McpVanguard caveat block).
+mcpm rows either" and that it is scored through one offline harness rather than vanguard's
+live composed proxy (`README.md`, the McpVanguard caveat block — whose own counts are the
+older v4 ones). On corpus v5 it scores 29 of 56 and abstains on the other 27
+(`README.md`, the baseline table's v5 row; `adapters/mcp-vanguard/README.md`, "Result,
+2026-08-30 ... corpus v5").
 
 One sentence each: mcpm misses both cases by reading them and matching nothing; vanguard
 misses one the same way and never looks at the other at all.
@@ -120,8 +141,10 @@ confusion: TP 32 FN 4 FP 0 TN 20  (scored 56/56)
 misses: 4
 ```
 
-The scoreboard's miss list (`out/scoreboard-mcpm@0.39.1-2026-09-11.md`) names both
-Deadbugz cases among the four:
+The run writes a scoreboard beside those figures
+(`out/scoreboard-mcpm@0.39.1-<utc-date>.md`; `out/scoreboard-*` is gitignored, so it is a
+local artefact of your own run, not a file in this repo). Its miss list names both Deadbugz
+cases among the four:
 
 ```
 - cve-2026-25650-mcp-salesforce-token-disclosure — missed attack (expected warn, got pass)
@@ -149,6 +172,9 @@ $ pnpm install --frozen-lockfile && pnpm vitest run src/guard/__tests__/deadbugz
       Tests  8 passed (8)
 ```
 
+(File paths and per-test timings are trimmed from the `--reporter=verbose` lines above;
+the names and their order are verbatim.)
+
 The first test's name is not a typo: `#58 FIXED` asserts `"block"`, the closed half of
 this story. The seventh test, `GAP: mcpm has no drift/pin protection for prompts/get at
 all`, asserts a no-op — the open half, in the same file, still passing today.
@@ -158,16 +184,18 @@ The engine there is the same stateless `inspectFrame` composition scored above, 
 from `getmcpm/cli` tag `v0.39.1` (`engine.lock.json`) out of exactly three entry modules —
 `inspect-frame.ts`, `owasp.ts`, `signatures.ts` — and 10 more files they pull in
 (`guard-playground/README.md`, "How the engine gets here"; `grep -c '^// src/'
-site/engine.mjs` = 13). Pasting either Deadbugz case in reproduces the same `pass` shown
-in (a), one click, no install. It cannot show the block in (b): `pins.ts`, `drift.ts`, and
-`run-inner.ts` are not part of the bundle, and the project's own plan says so directly —
+site/engine.mjs` = 13). Both Deadbugz cases are preloaded in its case list, so one click
+reproduces the same `pass` as (a) — no install, and a pasted frame of your own takes the
+same path. It cannot show the block in (b): `pins.ts`, `drift.ts`, and `run-inner.ts` are
+not part of the bundle, and the project's own plan says so directly —
 "the same-session pin/drift defense — the part that catches a Deadbugz-style flip — needs
 the relay" (`guard-playground/docs/PLAN.md`, line 49-50). The playground is a demo of the
 stateless floor, not the stateful defense that actually closed this.
 
 ## What a reader can do with this
 
-Write a case the reference guard misses and it will not fail CI for missing it — see
-`cases/` and the runner contract in `adapters/README.md`. Or write an adapter for your own
-guard and score it through its published CLI or library API, never a vendored copy of its
-internals — same file, `adapters/README.md`.
+Write a case the reference guard misses and it will not fail CI for missing it: the runner
+"exits non-zero only on an unhealthy run ... never on a low score" (`README.md`). Or write
+an adapter for your own guard and score it through its published CLI or library API, never
+a vendored copy of its internals. See `cases/` for the case format and
+`adapters/README.md` for both contracts.

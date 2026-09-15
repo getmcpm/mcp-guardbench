@@ -185,14 +185,14 @@ all`, asserts a no-op — the open half, in the same file, still passing today.
 
 **(c) The interactive path — [guard-playground](https://getmcpm.github.io/guard-playground/).**
 The engine there is the same stateless `inspectFrame` composition scored above, bundled
-from `getmcpm/cli` tag `v0.39.2` (`engine.lock.json`) out of exactly three entry modules —
+from `getmcpm/cli` tag `v0.40.0` (`engine.lock.json`) out of exactly three entry modules —
 `inspect-frame.ts`, `owasp.ts`, `signatures.ts` — and 10 more files they pull in
 (`guard-playground/README.md`, "How the engine gets here"; `grep -c '^// src/'
-site/engine.mjs` = 13). That pin moved from `v0.39.1` when the cli released v0.39.2, and
-the engine is unchanged across the two tags: `git diff v0.39.1 v0.39.2 -- src/guard/` is
-empty, and rebuilding the bundle against the new tag reproduced `site/engine.mjs` byte for
-byte — so the page still runs exactly the code the `0.39.1` measurements above were taken
-against. Both Deadbugz cases are preloaded in its case list, so one click
+site/engine.mjs` = 13). That pin has moved twice since `v0.39.1` — to `v0.39.2` and now
+`v0.40.0` — and the engine is unchanged across all three tags: `git diff v0.39.1 v0.40.0
+-- src/guard/` is empty, and rebuilding the bundle against each new tag reproduced
+`site/engine.mjs` byte for byte — so the page still runs exactly the code the `0.39.1`
+measurements above were taken against. Both Deadbugz cases are preloaded in its case list, so one click
 reproduces the same `pass` as (a) — no install, and a pasted frame of your own takes the
 same path. It cannot show the block in (b): `pins.ts`, `drift.ts`, and `run-inner.ts` are
 not part of the bundle, and the project's own plan says so directly —

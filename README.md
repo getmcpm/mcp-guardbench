@@ -82,6 +82,7 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage | corpus |
 |---|---|---|---|---|---|---|
+| `@getmcpm/cli@0.42.0` | 88.9% | 0.0% | 100.0% | 89.3% | 56/56 | v5 |
 | `@getmcpm/cli@0.38.0` | 88.9% | 0.0% | 100.0% | 89.3% | 56/56 | v5 |
 | `@getmcpm/cli@0.32.0` | 88.9% | 0.0% | 100.0% | 89.3% | 56/56 | v5 |
 | `mcp-vanguard@2.2.1` ⚠ partial scope | 26.3% | 0.0% | 100.0% | 44.8% | **29/56** | v5 |
@@ -97,9 +98,10 @@ low score.**
 
 mcpm rows measured through `npx @getmcpm/cli@<version> guard inspect --json`; the Cisco row
 through `mcp-scanner static`; the McpVanguard rows through `vanguard benchmark-run
---json-output --profile strict`. Every guard is driven by its own published CLI. The three v5
-rows are the only ones measured on the current 56-case corpus (`@getmcpm/cli@0.38.0` on
-2026-09-08; the `0.32.0` and McpVanguard rows on 2026-08-30); Cisco and the naive baseline
+--json-output --profile strict`. Every guard is driven by its own published CLI. The four v5
+rows are the only ones measured on the current 56-case corpus (`@getmcpm/cli@0.42.0` on
+2026-09-19; `@getmcpm/cli@0.38.0` on 2026-09-08; the `0.32.0` and McpVanguard rows on
+2026-08-30); Cisco and the naive baseline
 were not re-run this cycle and are shown at their last-measured v4 numbers — see
 [Corpus v5](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz) below.
 

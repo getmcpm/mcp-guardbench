@@ -44,8 +44,8 @@ stick: versioned cases, an open schema, a language-agnostic runner, a scoreboard
 anyone can reproduce from a clean clone, in CI, on every commit.
 
 **If you want scale, not reproducibility.** This corpus is deliberately small
-(56 cases) and hand-curated so every case's provenance and expected verdict can
-be checked by a human — that is a corpus-size trade, not a claim that 56 cases
+(57 cases) and hand-curated so every case's provenance and expected verdict can
+be checked by a human — that is a corpus-size trade, not a claim that 57 cases
 is enough attack surface. For large attack corpora built from real MCP
 servers, see [MCPTox](https://arxiv.org/abs/2508.14925) (1,312 cases across 45
 real-world MCP servers) or [MCPSecBench](https://arxiv.org/abs/2508.13220) (17
@@ -82,6 +82,7 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage | corpus |
 |---|---|---|---|---|---|---|
+| `@getmcpm/cli@0.42.0` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.42.0` | 88.9% | 0.0% | 100.0% | 89.3% | 56/56 | v5 |
 | `@getmcpm/cli@0.38.0` | 88.9% | 0.0% | 100.0% | 89.3% | 56/56 | v5 |
 | `@getmcpm/cli@0.32.0` | 88.9% | 0.0% | 100.0% | 89.3% | 56/56 | v5 |
@@ -98,12 +99,15 @@ low score.**
 
 mcpm rows measured through `npx @getmcpm/cli@<version> guard inspect --json`; the Cisco row
 through `mcp-scanner static`; the McpVanguard rows through `vanguard benchmark-run
---json-output --profile strict`. Every guard is driven by its own published CLI. The four v5
-rows are the only ones measured on the current 56-case corpus (`@getmcpm/cli@0.42.0` on
-2026-09-19; `@getmcpm/cli@0.38.0` on 2026-09-08; the `0.32.0` and McpVanguard rows on
-2026-08-30); Cisco and the naive baseline
-were not re-run this cycle and are shown at their last-measured v4 numbers — see
-[Corpus v5](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz) below.
+--json-output --profile strict`. Every guard is driven by its own published CLI. The five v5
+rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.42.0` on 2026-09-20 is the
+only one measured on the current 57-case corpus, after
+[`deadbugz-supply-chain-mongodb-tool-poisoning`](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz)
+was contributed; that same version's prior 56-case measurement from 2026-09-19 is kept as a
+history row rather than overwritten, alongside `@getmcpm/cli@0.38.0` (2026-09-08) and the
+`0.32.0`/McpVanguard rows (2026-08-30), all measured on the 56-case corpus. Cisco and the
+naive baseline were not re-run this cycle and are shown at their last-measured v4 numbers —
+see [Corpus v5](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz) below.
 
 **Corpus v4 (54 cases)** adds seven cases derived from real, publicly disclosed CVEs in
 third-party MCP servers and clients — github-kanban-mcp-server, godot-mcp,
@@ -408,9 +412,24 @@ inspecting and not matching, the other misses by never looking.
 Cisco and the naive substring baseline were not re-run this cycle (both require separate
 setup this pass didn't repeat) and keep their v4/54-case rows in the table above.
 
+**Update, measured 2026-09-20 against `@getmcpm/cli@0.42.0`, 57-case corpus**
+(`MCPM_CMD="npx -y @getmcpm/cli@0.42.0 guard inspect --json" npm run bench:mcpm`): a third
+Deadbugz-derived case, `deadbugz-supply-chain-mongodb-tool-poisoning`, was contributed
+externally — the first external contribution to this corpus — by
+[@vguillaume8](https://github.com/vguillaume8) in
+[#3](https://github.com/getmcpm/mcp-guardbench/pull/3). It applies the same post-flip
+tool-description-poisoning mechanism to the real `mongodb-mcp-server@3.0.0` tool surface
+(`find`/`insertOne`/`aggregate`/`count`) with different phrasing ("supplemental
+telemetry" rather than "diagnostic purposes"), testing whether coverage of this attack
+class is structural or wording-dependent. It scores a fifth MISS alongside the four
+above — the phrasing matches no `owasp-mcp-1-tool-description-injection` regex shape,
+same root cause as its sibling case — so recall on the 57-case corpus drops to **86.5%**
+(32/37). fp-rate and precision are unaffected: 0.0% and 100.0%. The prior 56-case row for
+`@getmcpm/cli@0.42.0` is kept above, per this project's never-erase convention.
+
 ## Corpus
 
-56 single-frame cases today (32 attack, 20 benign, 4 warn-and-forward), each in
+57 single-frame cases today (33 attack, 20 benign, 4 warn-and-forward), each in
 [`schema/case.schema.json`](schema/case.schema.json):
 
 | bucket | must | maps to |
@@ -491,7 +510,7 @@ markdown lists each abstained case with the reason the adapter gave: the claim i
 auditable even though it is not enforced.
 
 A note on two different counts of the same corpus: the scoreboard's
-"expected-detection" figure is **36** — the 32 `attacks/` cases *plus* the 4
+"expected-detection" figure is **37** — the 33 `attacks/` cases *plus* the 4
 `warn/` cases, since both must be flagged. The bucket split is printed alongside
 it so the two never appear to disagree.
 

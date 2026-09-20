@@ -1,0 +1,20 @@
+# Dependabot — keep dependencies and pinned GitHub Actions patched.
+version: 2
+updates:
+  # Pinned action SHAs in bench.yml — get PRs when a new release is
+  # available so they don't silently drift out of date.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "ci"]
+
+  # npm dependencies.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies"]
+    groups:
+      dev-dependencies:
+        dependency-type: "development"

@@ -82,6 +82,7 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage | corpus |
 |---|---|---|---|---|---|---|
+| `@getmcpm/cli@0.42.1` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.42.0` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.42.0` | 88.9% | 0.0% | 100.0% | 89.3% | 56/56 | v5 |
 | `@getmcpm/cli@0.38.0` | 88.9% | 0.0% | 100.0% | 89.3% | 56/56 | v5 |
@@ -99,13 +100,14 @@ low score.**
 
 mcpm rows measured through `npx @getmcpm/cli@<version> guard inspect --json`; the Cisco row
 through `mcp-scanner static`; the McpVanguard rows through `vanguard benchmark-run
---json-output --profile strict`. Every guard is driven by its own published CLI. The five v5
-rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.42.0` on 2026-09-20 is the
-only one measured on the current 57-case corpus, after
+--json-output --profile strict`. Every guard is driven by its own published CLI. The six v5
+rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.42.1` on 2026-09-24 and
+`@getmcpm/cli@0.42.0` on 2026-09-20 are the two measured on the current 57-case corpus (the
+latter after
 [`deadbugz-supply-chain-mongodb-tool-poisoning`](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz)
-was contributed; that same version's prior 56-case measurement from 2026-09-19 is kept as a
-history row rather than overwritten, alongside `@getmcpm/cli@0.38.0` (2026-09-08) and the
-`0.32.0`/McpVanguard rows (2026-08-30), all measured on the 56-case corpus. Cisco and the
+was contributed); `@getmcpm/cli@0.42.0`'s prior 56-case measurement from 2026-09-19 is kept
+as a history row rather than overwritten, alongside `@getmcpm/cli@0.38.0` (2026-09-08) and
+the `0.32.0`/McpVanguard rows (2026-08-30), all measured on the 56-case corpus. Cisco and the
 naive baseline were not re-run this cycle and are shown at their last-measured v4 numbers —
 see [Corpus v5](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz) below.
 
@@ -426,6 +428,18 @@ above — the phrasing matches no `owasp-mcp-1-tool-description-injection` regex
 same root cause as its sibling case — so recall on the 57-case corpus drops to **86.5%**
 (32/37). fp-rate and precision are unaffected: 0.0% and 100.0%. The prior 56-case row for
 `@getmcpm/cli@0.42.0` is kept above, per this project's never-erase convention.
+
+**Update, measured 2026-09-24 against `@getmcpm/cli@0.42.1`, 57-case corpus**
+(`MCPM_CMD="npx -y @getmcpm/cli@0.42.1 guard inspect --json" npm run bench:mcpm`): 0.42.1's
+own release notes describe the guard change as skipping non-object array elements during
+inspection and adding a fail-closed catch around it, with a pre-tag audit reporting
+byte-identical verdicts against 0.42.0 on 100 fixture/corpus frames. Re-measured here rather
+than assumed: recall **86.5%** (32/37), fp-rate 0.0%, precision 100.0%, exact-action 87.7%,
+57/57 scored — identical to the 0.42.0/57-case row above on every metric, including the same
+five misses. A direct per-case diff of both versions' verdicts (action and `signature_id`,
+all 57 cases, same NDJSON input, same adapter, same session) found zero differences,
+confirming the audit's claim rather than merely reproducing its aggregate numbers. The
+0.42.0 rows are kept above, per this project's never-erase convention.
 
 ## Corpus
 

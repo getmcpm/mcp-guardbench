@@ -82,6 +82,7 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage | corpus |
 |---|---|---|---|---|---|---|
+| `@getmcpm/cli@0.42.2` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.42.1` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.42.0` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.42.0` | 88.9% | 0.0% | 100.0% | 89.3% | 56/56 | v5 |
@@ -100,10 +101,10 @@ low score.**
 
 mcpm rows measured through `npx @getmcpm/cli@<version> guard inspect --json`; the Cisco row
 through `mcp-scanner static`; the McpVanguard rows through `vanguard benchmark-run
---json-output --profile strict`. Every guard is driven by its own published CLI. The six v5
-rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.42.1` on 2026-09-24 and
-`@getmcpm/cli@0.42.0` on 2026-09-20 are the two measured on the current 57-case corpus (the
-latter after
+--json-output --profile strict`. Every guard is driven by its own published CLI. The seven v5
+rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.42.2` on 2026-09-25,
+`@getmcpm/cli@0.42.1` on 2026-09-24 and `@getmcpm/cli@0.42.0` on 2026-09-20 are the three
+measured on the current 57-case corpus (the last after
 [`deadbugz-supply-chain-mongodb-tool-poisoning`](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz)
 was contributed); `@getmcpm/cli@0.42.0`'s prior 56-case measurement from 2026-09-19 is kept
 as a history row rather than overwritten, alongside `@getmcpm/cli@0.38.0` (2026-09-08) and
@@ -440,6 +441,16 @@ five misses. A direct per-case diff of both versions' verdicts (action and `sign
 all 57 cases, same NDJSON input, same adapter, same session) found zero differences,
 confirming the audit's claim rather than merely reproducing its aggregate numbers. The
 0.42.0 rows are kept above, per this project's never-erase convention.
+
+**Update, measured 2026-09-25 against `@getmcpm/cli@0.42.2`, 57-case corpus**
+(`MCPM_CMD="npx -y @getmcpm/cli@0.42.2 guard inspect --json" npm run bench:mcpm`): 0.42.2's
+changes are in the guard's stdio relay: a frame nested too deep to re-serialize, or one over
+10 MiB, is now blocked instead of crashing the guard process. `guard inspect` does not run
+the relay, so no verdict was expected to move, and none did. Recall **86.5%** (32/37), fp-rate
+0.0%, precision 100.0%, exact-action 87.7%, 57/57 scored, identical to the 0.42.1 row. A
+per-case diff of both published binaries' verdicts (action and `signature_id`, all 57 cases,
+same NDJSON input through the reference adapter) was byte-identical. The 0.42.1 row is kept
+above, per this project's never-erase convention.
 
 ## Corpus
 

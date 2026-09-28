@@ -82,6 +82,7 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage | corpus |
 |---|---|---|---|---|---|---|
+| `@getmcpm/cli@0.42.4` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.42.3` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.42.2` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.42.1` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
@@ -102,10 +103,11 @@ low score.**
 
 mcpm rows measured through `npx @getmcpm/cli@<version> guard inspect --json`; the Cisco row
 through `mcp-scanner static`; the McpVanguard rows through `vanguard benchmark-run
---json-output --profile strict`. Every guard is driven by its own published CLI. The eight v5
-rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.42.3` on 2026-09-26,
-`@getmcpm/cli@0.42.2` on 2026-09-25, `@getmcpm/cli@0.42.1` on 2026-09-24 and
-`@getmcpm/cli@0.42.0` on 2026-09-20 are the four measured on the current 57-case corpus (the last after
+--json-output --profile strict`. Every guard is driven by its own published CLI. The nine v5
+rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.42.4` on 2026-09-28,
+`@getmcpm/cli@0.42.3` on 2026-09-26, `@getmcpm/cli@0.42.2` on 2026-09-25,
+`@getmcpm/cli@0.42.1` on 2026-09-24 and `@getmcpm/cli@0.42.0` on 2026-09-20 are the five
+measured on the current 57-case corpus (the last after
 [`deadbugz-supply-chain-mongodb-tool-poisoning`](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz)
 was contributed); `@getmcpm/cli@0.42.0`'s prior 56-case measurement from 2026-09-19 is kept
 as a history row rather than overwritten, alongside `@getmcpm/cli@0.38.0` (2026-09-08) and
@@ -463,6 +465,17 @@ case is nested that deep, so no verdict was expected to move, and none did. Reca
 0.42.2 row. A per-case diff of both published binaries' verdicts (action and `signature_id`,
 all 57 cases, same NDJSON input through the reference adapter) was byte-identical. The 0.42.2
 row is kept above, per this project's never-erase convention.
+
+**Update, measured 2026-09-28 against `@getmcpm/cli@0.42.4`, 57-case corpus**
+(`MCPM_CMD="npx -y @getmcpm/cli@0.42.4 guard inspect --json" npm run bench:mcpm`): 0.42.4's
+changes are in the guard's pin store and relay: the drift hash no longer overflows on a
+`tools/list` schema or `initialize` nested ~2,600 levels deep, and guard sessions started
+together no longer overwrite each other's `pins.json` entries. `guard inspect` runs neither
+the drift check nor the pin store, so no verdict was expected to move, and none did. Recall
+**86.5%** (32/37), fp-rate 0.0%, precision 100.0%, exact-action 87.7%, 57/57 scored,
+identical to the 0.42.3 row. A per-case diff of both published binaries' verdicts (action
+and `signature_id`, all 57 cases, same NDJSON input through the reference adapter) was
+byte-identical. The 0.42.3 row is kept above, per this project's never-erase convention.
 
 ## Corpus
 

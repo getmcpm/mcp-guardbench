@@ -82,6 +82,7 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage | corpus |
 |---|---|---|---|---|---|---|
+| `@getmcpm/cli@0.45.0` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.43.0` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.42.5` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.42.4` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
@@ -105,12 +106,13 @@ low score.**
 
 mcpm rows measured through `npx @getmcpm/cli@<version> guard inspect --json`; the Cisco row
 through `mcp-scanner static`; the McpVanguard rows through `vanguard benchmark-run
---json-output --profile strict`. Every guard is driven by its own published CLI. The eleven v5
-rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.43.0` on 2026-09-30,
+--json-output --profile strict`. Every guard is driven by its own published CLI. The twelve v5
+rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.45.0` on 2026-10-07,
+`@getmcpm/cli@0.43.0` on 2026-09-30,
 `@getmcpm/cli@0.42.5` on 2026-09-29,
 `@getmcpm/cli@0.42.4` on 2026-09-28, `@getmcpm/cli@0.42.3` on 2026-09-26,
 `@getmcpm/cli@0.42.2` on 2026-09-25, `@getmcpm/cli@0.42.1` on 2026-09-24 and
-`@getmcpm/cli@0.42.0` on 2026-09-20 are the seven measured on the current 57-case corpus (the last after
+`@getmcpm/cli@0.42.0` on 2026-09-20 are the eight measured on the current 57-case corpus (the last after
 [`deadbugz-supply-chain-mongodb-tool-poisoning`](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz)
 was contributed); `@getmcpm/cli@0.42.0`'s prior 56-case measurement from 2026-09-19 is kept
 as a history row rather than overwritten, alongside `@getmcpm/cli@0.38.0` (2026-09-08) and

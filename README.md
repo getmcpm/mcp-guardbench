@@ -82,6 +82,7 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage | corpus |
 |---|---|---|---|---|---|---|
+| `@getmcpm/cli@0.47.3` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.45.0` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.43.0` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.42.5` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
@@ -106,13 +107,14 @@ low score.**
 
 mcpm rows measured through `npx @getmcpm/cli@<version> guard inspect --json`; the Cisco row
 through `mcp-scanner static`; the McpVanguard rows through `vanguard benchmark-run
---json-output --profile strict`. Every guard is driven by its own published CLI. The twelve v5
-rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.45.0` on 2026-10-07,
+--json-output --profile strict`. Every guard is driven by its own published CLI. The thirteen v5
+rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.47.3` on 2026-10-18,
+`@getmcpm/cli@0.45.0` on 2026-10-07,
 `@getmcpm/cli@0.43.0` on 2026-09-30,
 `@getmcpm/cli@0.42.5` on 2026-09-29,
 `@getmcpm/cli@0.42.4` on 2026-09-28, `@getmcpm/cli@0.42.3` on 2026-09-26,
 `@getmcpm/cli@0.42.2` on 2026-09-25, `@getmcpm/cli@0.42.1` on 2026-09-24 and
-`@getmcpm/cli@0.42.0` on 2026-09-20 are the eight measured on the current 57-case corpus (the last after
+`@getmcpm/cli@0.42.0` on 2026-09-20 are the nine measured on the current 57-case corpus (the last after
 [`deadbugz-supply-chain-mongodb-tool-poisoning`](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz)
 was contributed); `@getmcpm/cli@0.42.0`'s prior 56-case measurement from 2026-09-19 is kept
 as a history row rather than overwritten, alongside `@getmcpm/cli@0.38.0` (2026-09-08) and
@@ -504,6 +506,19 @@ to the 0.42.5 row. A per-case diff of both published binaries' verdicts (action 
 `signature_id`, all 57 cases, same NDJSON input through the reference adapter) was
 byte-identical. The 0.42.5 row is kept above, per this project's never-erase convention.
 
+**Update, measured 2026-10-18 against `@getmcpm/cli@0.47.3`, 57-case corpus**
+(`MCPM_CMD="npx -y @getmcpm/cli@0.47.3 guard inspect --json" npm run bench:mcpm`): 0.47.0
+extends `guard inspect` to modern MCP discovery instructions, reserved server identity
+metadata, and sampling/elicitation embedded in `inputRequests`; unknown embedded requests
+warn with `guard-unsupported-input-request`. 0.47.1–0.47.3 add sandbox/native-client
+tooling and a VS Code JSONC edit fix — none of those change the signature catalog this
+benchmark scores. No corpus case carries an unknown embedded input-request, so no verdict
+was expected to move, and none did. Recall **86.5%** (32/37), fp-rate 0.0%, precision 100.0%,
+exact-action 87.7%, 57/57 scored, identical to the 0.45.0 row. A per-case diff of both
+published binaries' verdicts (action and `signature_id`, all 57 cases, same NDJSON input
+through the reference adapter) was byte-identical. The 0.45.0 row is kept above, per this
+project's never-erase convention.
+
 ## Corpus
 
 57 single-frame cases today (33 attack, 20 benign, 4 warn-and-forward), each in
@@ -519,12 +534,13 @@ Provenance is **mixed, and each case says which it is.** 41 cases carry
 `"provenance": "extracted"` (or no field, which predates the distinction): they come from
 `@getmcpm/cli`'s hand-authored guard fixtures, which derive from **public** attack
 methodology (Invariant Labs 2025, MCPoison CVE-2025-54136, Equixly/Pillar audits).
-License-clean — no MCPTox artifacts copied. Eight carry `"provenance": "native"`: written
+License-clean — no MCPTox artifacts copied. Nine carry `"provenance": "native"`: written
 here, against no guard's implementation, because **a corpus extracted from one guard's
 fixtures cannot grow in a direction that guard cannot see** — the failure this project
-exists to make visible. Two of those eight are the first native cases derived from a live
-in-the-wild campaign rather than an invented scenario — Pillar Security's Deadbugz
-disclosure (2026-08-12), single-frame detection slices of a stateful attack; see
+exists to make visible. Three of those nine are derived from a live in-the-wild campaign
+rather than an invented scenario — Pillar Security's Deadbugz disclosure (2026-08-12),
+the two original single-frame slices plus the later mongodb-mcp-server supply-chain
+variant; see
 [Corpus v5](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz) below. Seven
 carry `"provenance": "external"`: derived from real, publicly disclosed CVEs in
 third-party MCP servers/clients, rebuilt from public NVD/GHSA data — see
@@ -534,9 +550,11 @@ third-party MCP servers/clients, rebuilt from public NVD/GHSA data — see
 Corpus v4 = `@getmcpm/cli`'s fixtures as of **v0.28.0's release** (41 cases), plus the six
 native cases it had at the time, plus the seven external CVE cases. Corpus v5 added two
 more native cases by hand (see [Corpus v5](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz)
-above), for eight native cases today. Upstream has since grown to 55 single-frame
+above), then a third Deadbugz-derived case was contributed externally in
+[#3](https://github.com/getmcpm/mcp-guardbench/pull/3), for nine native cases today.
+Upstream has since grown to 55 single-frame
 fixtures; the extraction script preserves native/external cases (it only overwrites
-fixture-derived ones), so running the command below today yields **70** cases (55 + 8 + 7)
+fixture-derived ones), so running the command below today yields **71** cases (55 + 9 + 7)
 and every published number above stops applying. The 14 extra fixture cases
 are held back on purpose: nine are TAG-block attacks added when mcpm shipped that
 coverage, and importing a family the reference guard had just fixed would inflate its

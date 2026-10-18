@@ -5,7 +5,7 @@
  * Implements the mcp-guardbench adapter contract (see adapters/README.md):
  *   stdin:  NDJSON, one {"id","message"} per line
  *   stdout: NDJSON, one {"id","action","signature_id"?} per line
- *   action ∈ "pass" | "warn" | "block" | "error"
+ *   action ∈ "pass" | "warn" | "block" | "error" | "unsupported"
  *
  * It scores mcpm through mcpm's OWN PUBLISHED CLI — `mcpm guard inspect --json`
  * — not by importing the engine. That is deliberate and load-bearing for this
@@ -27,8 +27,61 @@
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 
+/**
+ * Split MCPM_CMD on whitespace while keeping '…' / "…" tokens intact.
+ * No backslash escapes — the documented invocations don't need them.
+ */
+function splitCmd(cmd) {
+  const out = [];
+  let cur = "";
+  let quote = null;
+  for (const ch of cmd) {
+    if (quote) {
+      if (ch === quote) quote = null;
+      else cur += ch;
+    } else if (ch === "'" || ch === '"') {
+      quote = ch;
+    } else if (ch === " " || ch === "\t") {
+      if (cur !== "") {
+        out.push(cur);
+        cur = "";
+      }
+    } else {
+      cur += ch;
+    }
+  }
+  if (quote) throw new Error(`MCPM_CMD has an unclosed ${quote} quote`);
+  if (cur !== "") out.push(cur);
+  return out;
+}
+
+if (process.argv.includes("--self-check")) {
+  const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const cases = [
+    ["npx --yes @getmcpm/cli@0.47.3 guard inspect --json", ["npx", "--yes", "@getmcpm/cli@0.47.3", "guard", "inspect", "--json"]],
+    ["npx --yes '@getmcpm/cli@0.47.3' guard inspect --json", ["npx", "--yes", "@getmcpm/cli@0.47.3", "guard", "inspect", "--json"]],
+    ['node -e "console.log(1)"', ["node", "-e", "console.log(1)"]],
+    ["  mcpm   guard\tinspect  --json  ", ["mcpm", "guard", "inspect", "--json"]],
+  ];
+  for (const [input, expected] of cases) {
+    const got = splitCmd(input);
+    if (!eq(got, expected)) {
+      throw new Error(`splitCmd(${JSON.stringify(input)}) => ${JSON.stringify(got)}, expected ${JSON.stringify(expected)}`);
+    }
+  }
+  let threw = false;
+  try {
+    splitCmd("npx 'unclosed");
+  } catch (e) {
+    threw = /unclosed/.test(e.message);
+  }
+  if (!threw) throw new Error("splitCmd should reject an unclosed quote");
+  process.stderr.write("splitCmd self-check ok\n");
+  process.exit(0);
+}
+
 const CMD = process.env.MCPM_CMD ?? "mcpm guard inspect --json";
-const [bin, ...args] = CMD.split(" ").filter((s) => s !== "");
+const [bin, ...args] = splitCmd(CMD);
 
 // Read every case up front so the id order is fixed before the child speaks.
 const ids = [];
@@ -59,7 +112,7 @@ child.on("error", (err) => {
   process.stderr.write(`adapter: cannot run "${CMD}": ${err.message}\n`);
 });
 
-const VALID_ACTIONS = new Set(["pass", "warn", "block", "error"]);
+const VALID_ACTIONS = new Set(["pass", "warn", "block", "error", "unsupported"]);
 const unexpectedLines = [];
 let i = 0;
 const rl = createInterface({ input: child.stdout, crlfDelay: Infinity });
@@ -88,7 +141,9 @@ rl.on("line", (line) => {
   // Informational only — the runner scores on action. mcpm reports every
   // finding; the first is the one the action derives from.
   if (verdict.findings?.[0]?.signature_id) out.signature_id = verdict.findings[0].signature_id;
-  if (verdict.action === "error" && verdict.error) out.error = verdict.error;
+  if ((verdict.action === "error" || verdict.action === "unsupported") && verdict.error) {
+    out.error = verdict.error;
+  }
   process.stdout.write(JSON.stringify(out) + "\n");
 });
 

@@ -27,6 +27,9 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Test adapter contract
+        run: npm test
+
       # Scored through the PUBLISHED CLI, exactly as any third-party guard would
       # be — never by importing mcpm's engine. See adapters/README.md.
       #

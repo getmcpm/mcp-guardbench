@@ -75,6 +75,11 @@ MCPM_CMD="npx --yes @getmcpm/cli@0.27.0 guard inspect --json" \
   node runner/run.mjs --adapter "node adapters/mcpm/adapter.mjs" --name mcpm@0.27.0
 ```
 
+`MCPM_CMD` accepts whitespace-separated arguments and single/double quotes (including
+empty quoted arguments and literal backslashes inside quotes). It does not run a
+shell or expand variables; unquoted backslash escapes and unclosed quotes are
+rejected. Quote paths containing spaces or literal backslashes.
+
 A high reference score is **construction, not evidence** — the corpus was
 extracted from mcpm's own CI fixtures, so it is expected and is *not* a claim of
 superiority. Treat it as the sanity check that your adapter is wired up, not as

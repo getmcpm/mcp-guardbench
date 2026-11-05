@@ -5,7 +5,7 @@
  * Implements the mcp-guardbench adapter contract (see adapters/README.md):
  *   stdin:  NDJSON, one {"id","message"} per line
  *   stdout: NDJSON, one {"id","action","signature_id"?} per line
- *   action ∈ "pass" | "warn" | "block" | "error"
+ *   action ∈ "pass" | "warn" | "block" | "error" | "unsupported"
  *
  * It scores mcpm through mcpm's OWN PUBLISHED CLI — `mcpm guard inspect --json`
  * — not by importing the engine. That is deliberate and load-bearing for this
@@ -27,8 +27,42 @@
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 
+/**
+ * Split MCPM_CMD on whitespace while keeping '…' / "…" tokens intact.
+ * No shell expansion; quoted backslashes stay literal, unquoted escapes fail.
+ */
+function splitCmd(cmd) {
+  const out = [];
+  let cur = "";
+  let quote = null;
+  let started = false;
+  for (const ch of cmd) {
+    if (ch === "\\" && !quote) throw new Error("MCPM_CMD does not support unquoted backslash escapes; quote literal arguments instead");
+    if (quote) {
+      if (ch === quote) quote = null;
+      else cur += ch;
+    } else if (ch === "'" || ch === '"') {
+      quote = ch;
+      started = true;
+    } else if (/\s/u.test(ch)) {
+      if (started) {
+        out.push(cur);
+        cur = "";
+        started = false;
+      }
+    } else {
+      cur += ch;
+      started = true;
+    }
+  }
+  if (quote) throw new Error(`MCPM_CMD has an unclosed ${quote} quote`);
+  if (started) out.push(cur);
+  if (!out[0]) throw new Error("MCPM_CMD must name an executable");
+  return out;
+}
+
 const CMD = process.env.MCPM_CMD ?? "mcpm guard inspect --json";
-const [bin, ...args] = CMD.split(" ").filter((s) => s !== "");
+const [bin, ...args] = splitCmd(CMD);
 
 // Read every case up front so the id order is fixed before the child speaks.
 const ids = [];
@@ -59,9 +93,11 @@ child.on("error", (err) => {
   process.stderr.write(`adapter: cannot run "${CMD}": ${err.message}\n`);
 });
 
-const VALID_ACTIONS = new Set(["pass", "warn", "block", "error"]);
+const VALID_ACTIONS = new Set(["pass", "warn", "block", "error", "unsupported"]);
 const unexpectedLines = [];
 let i = 0;
+let hasWarnOrError = false;
+let hasBlock = false;
 const rl = createInterface({ input: child.stdout, crlfDelay: Infinity });
 rl.on("line", (line) => {
   const trimmed = line.trim();
@@ -83,12 +119,19 @@ rl.on("line", (line) => {
     return;
   }
   const id = ids[i++];
-  if (id === undefined) return; // more verdicts than cases — ignore the tail
+  if (id === undefined) {
+    unexpectedLines.push(trimmed);
+    return;
+  }
+  if (verdict.action === "warn" || verdict.action === "error") hasWarnOrError = true;
+  if (verdict.action === "block") hasBlock = true;
   const out = { id, action: verdict.action };
   // Informational only — the runner scores on action. mcpm reports every
   // finding; the first is the one the action derives from.
   if (verdict.findings?.[0]?.signature_id) out.signature_id = verdict.findings[0].signature_id;
-  if (verdict.action === "error" && verdict.error) out.error = verdict.error;
+  if ((verdict.action === "error" || verdict.action === "unsupported") && verdict.error) {
+    out.error = verdict.error;
+  }
   process.stdout.write(JSON.stringify(out) + "\n");
 });
 
@@ -96,14 +139,21 @@ for (const frame of frames) child.stdin.write(frame + "\n");
 child.stdin.end();
 
 await new Promise((resolve) => {
-  // NOTE: a non-zero exit is EXPECTED — `guard inspect` exits 2 when any frame
-  // would be blocked. The verdicts on stdout are the result; the code is not.
+  // Inspect exits 2 for blocks, 1 for warnings/errors; verdicts carry the result.
+  // A crash with the same complete output and exit code cannot be distinguished.
   let closed = 0;
   const bump = () => {
     if (++closed === 2) resolve();
   };
   rl.on("close", bump);
-  child.on("close", bump);
+  child.on("close", (code, signal) => {
+    const expectedOne = code === 1 && hasWarnOrError && !hasBlock && i === ids.length && unexpectedLines.length === 0;
+    if (code !== 0 && code !== 2 && !expectedOne) {
+      process.stderr.write(`adapter: guard exited ${signal ?? code}; results are not trustworthy\n`);
+      process.exitCode = 1;
+    }
+    bump();
+  });
   child.on("error", () => resolve());
 });
 

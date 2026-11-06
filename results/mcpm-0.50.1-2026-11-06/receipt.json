@@ -1,0 +1,59 @@
+{
+  "package": "@getmcpm/cli",
+  "version": "0.50.1",
+  "measuredAtUTC": "2026-11-06T05:59:26.113Z",
+  "measurementDateUTC": "2026-11-06",
+  "reportDate": "2026-11-06",
+  "reportTimezone": "Asia/Hong_Kong",
+  "runtime": {
+    "node": "v24.20.0",
+    "nodeSHA256": "9d050fd455b56426e25d4d603c7c501cbb2630348e836cf221dcce748e90588a",
+    "npm": "11.19.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "command": "MCPM_CMD='/Users/mingshum/.nvm/versions/node/v24.20.0/bin/node /private/tmp/mcpm-guardbench-0501-runtime-20261106-K1LG5j/node_modules/@getmcpm/cli/dist/index.js guard inspect --json' node runner/run.mjs --adapter 'node adapters/mcpm/adapter.mjs' --name mcpm@0.50.1",
+  "environment": {
+    "HOME": "disposable isolated home",
+    "installScripts": "disabled",
+    "realClientConfigsRead": false
+  },
+  "sourceTag": "v0.50.1",
+  "sourceCommit": "b3cc859d083cf684a5bf82cffa6a79ceb3f0ff61",
+  "sourceIdentityEvidence": "Release-manager cryptographic verification snapshot in published-proof.json; this benchmark independently rechecked archive SHA256/SRI and all installed package dist files plus package.json",
+  "npmIntegrity": "sha512-2ddRvViZNcJakVzcXNXMn/8qKXAGaN/ZBHedS3xYcNZi1JJCOb3WfUx++gBCpCfLlEV6O3DMs9KG+tkmXpOHfg==",
+  "npmTarball": "https://registry.npmjs.org/@getmcpm/cli/-/cli-0.50.1.tgz",
+  "npmAttestations": "https://registry.npmjs.org/-/npm/v1/attestations/@getmcpm%2fcli@0.50.1",
+  "archiveSHA256": "423866f3c8ce91e494ea66744f86053f868f59b9e2abaae96acc3d4d093e0e63",
+  "installedArchiveFilesMatched": 134,
+  "installedArchiveManifest": "installed-archive-manifest.json",
+  "installLock": "install-lock.json",
+  "installLockSHA256": "decf4fda07917abd85801d0361385650cb72fe8de25086ac5a846b2d48148e2d",
+  "corpusVersion": "v5",
+  "corpusCommit": "ba18d3deb4e4836920735a6fd97ca96ad836679e",
+  "repositoryBaseCommit": "5b61b0e9d15da62034cd5531b1e3b6da92484e7f",
+  "adapterCommit": "44d6798e0f83ca459e97d0b2b0dc17136554d968",
+  "adapterSource": "adapters/mcpm/adapter.mjs",
+  "adapterSHA256": "c68f0a704ba16b271da4b6dd45815e39d22c5881c438286e95f580c0e778f2f3",
+  "runnerSHA256": "5ddcfa2ecb368515efe4d2d85257e730142566efc2d56cd0387da7537f5dd6c4",
+  "corpusChanged": false,
+  "inputSHA256": "d279b09abc2f8ec85198268ae2da09d9b121bcb0eb3dc26db143476736487084",
+  "verdictsSHA256": "66c8fbfc71cac4318635264642319f8ec6c3f4ed538bdf10177fd51bd68cdf40",
+  "comparison": "All 57 adapter replay verdicts (id, action, signature_id) byte-identical to retained published 0.50.0 measurement; replay confusion and metrics independently reconcile with the official runner result",
+  "verdictCapture": "Separate replay through the unchanged public CLI adapter after the official runner measurement; not an intercepted runner stdout stream",
+  "artifactsSHA256": {
+    "scoreboard.json": "75270f8328529d54c34e63171dac5e4650a095268c30202b6784380a0c1f0a30",
+    "scoreboard.md": "e72157f87e42d3adfd2a211c10c1c595df2d9edcee9076661add303c15ce209f",
+    "verdicts-0.50.1.ndjson": "66c8fbfc71cac4318635264642319f8ec6c3f4ed538bdf10177fd51bd68cdf40",
+    "install-lock.json": "decf4fda07917abd85801d0361385650cb72fe8de25086ac5a846b2d48148e2d",
+    "installed-archive-manifest.json": "4c6fe888a0ad296ff0879e6eefa6748956bc2a6ab23e3e8a416ee3d4e6832746",
+    "published-proof.json": "eb504c8c381e5d128edb96b8ba15f777aeca00cb445a7dafd0afcd4b4a1f2f39"
+  },
+  "scope": "Stateless single-frame guard inspect only; no managed-policy/native client/relay or OS confinement proof; no other guards remeasured",
+  "reproductionCheck": {
+    "cleanNpmCiFromRetainedLock": true,
+    "offlineFromInitialInstallCache": true,
+    "separateDisposableHome": true,
+    "all57VerdictsByteIdentical": true
+  }
+}

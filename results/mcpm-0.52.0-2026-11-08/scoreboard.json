@@ -1,0 +1,149 @@
+{
+  "adapter": "mcpm@0.52.0",
+  "ranAt": "2026-11-08T08:39:02.986Z",
+  "corpus": {
+    "total": 57,
+    "attacks": 37,
+    "attackBucket": 33,
+    "warnBucket": 4,
+    "benign": 20
+  },
+  "coverage": {
+    "scored": 57,
+    "unsupported": 0,
+    "answered": 57,
+    "missingVerdict": 0,
+    "adapterErrors": 0,
+    "complete": true,
+    "scoredFraction": 1
+  },
+  "contractViolations": {
+    "overBlockedWarnCases": 0
+  },
+  "byCarrier": {
+    "result.content": {
+      "total": 21,
+      "scored": 21,
+      "unsupported": 0
+    },
+    "sampling/createMessage": {
+      "total": 1,
+      "scored": 1,
+      "unsupported": 0
+    },
+    "elicitation/create": {
+      "total": 1,
+      "scored": 1,
+      "unsupported": 0
+    },
+    "tools/call": {
+      "total": 9,
+      "scored": 9,
+      "unsupported": 0
+    },
+    "result.tools": {
+      "total": 17,
+      "scored": 17,
+      "unsupported": 0
+    },
+    "initialize": {
+      "total": 2,
+      "scored": 2,
+      "unsupported": 0
+    },
+    "result.contents": {
+      "total": 4,
+      "scored": 4,
+      "unsupported": 0
+    },
+    "result.messages": {
+      "total": 2,
+      "scored": 2,
+      "unsupported": 0
+    }
+  },
+  "abstained": [],
+  "anomalies": [],
+  "metrics": {
+    "recall": 0.8649,
+    "fp_rate": 0,
+    "precision": 1,
+    "exact_action_accuracy": 0.8772
+  },
+  "confusion": {
+    "TP": 32,
+    "FN": 5,
+    "FP": 0,
+    "TN": 20
+  },
+  "byCategory": {
+    "MCP-CREDENTIAL-EXFIL": {
+      "detected": 2,
+      "total": 3,
+      "recall": 0.6667
+    },
+    "MCP-CREDENTIAL-PHISHING": {
+      "detected": 2,
+      "total": 2,
+      "recall": 1
+    },
+    "MCP-COMMAND-INJECTION": {
+      "detected": 2,
+      "total": 2,
+      "recall": 1
+    },
+    "MCP-CODE-INJECTION": {
+      "detected": 2,
+      "total": 2,
+      "recall": 1
+    },
+    "MCP-QUERY-INJECTION": {
+      "detected": 1,
+      "total": 1,
+      "recall": 1
+    },
+    "MCP-ARGUMENT-INJECTION": {
+      "detected": 0,
+      "total": 1,
+      "recall": 0
+    },
+    "OWASP-MCP-1": {
+      "detected": 9,
+      "total": 11,
+      "recall": 0.8182
+    },
+    "OWASP-MCP-2": {
+      "detected": 11,
+      "total": 12,
+      "recall": 0.9167
+    },
+    "OWASP-MCP-7": {
+      "detected": 3,
+      "total": 3,
+      "recall": 1
+    }
+  },
+  "misses": [
+    {
+      "id": "cve-2026-25650-mcp-salesforce-token-disclosure",
+      "reason": "missed attack (expected warn, got pass)"
+    },
+    {
+      "id": "cve-2026-39884-mcp-server-kubernetes-argument-injection",
+      "reason": "missed attack (expected block, got pass)"
+    },
+    {
+      "id": "deadbugz-post-flip-tool-description-poisoning",
+      "reason": "missed attack (expected block, got pass)"
+    },
+    {
+      "id": "deadbugz-supply-chain-mongodb-tool-poisoning",
+      "reason": "missed attack (expected block, got pass)"
+    },
+    {
+      "id": "deadbugz-post-flip-prompt-exfil-instructions",
+      "reason": "missed attack (expected warn, got pass)"
+    }
+  ],
+  "elapsedMs": 258
+}

@@ -62,7 +62,7 @@
     "passed": 14,
     "failed": 0
   },
-  "scope": "Stateless single-frame guard inspect only; no policy-init host inventory/native client/relay/managed-policy enforcement or OS confinement proof; no other guards remeasured",
+  "scope": "Stateless single-frame guard inspect only; no coverage-aware audit report/native client/relay/managed-policy enforcement or OS confinement proof; no other guards remeasured",
   "artifactsSHA256": {
     "install-lock.json": "c9e3b52271e4399449c30838574fdac18706e0e083ee34f6ce04fc46d156a2ac",
     "installed-archive-manifest.json": "d2697169033596bb560d26581c636a05ad454364b619a7d9075f1ccd6f738431",

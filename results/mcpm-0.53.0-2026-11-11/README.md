@@ -75,6 +75,6 @@ The raw replay uses the same runner bucket/file order (`attacks`, `benign`,
 SHA256 is recorded in the receipt. Keep payloads out of model prompts.
 
 This is stateless single-frame `guard inspect` evidence. It does not exercise
-0.53.0's policy-init host inventory, native loading, stateful relay, managed-policy
+0.53.0's coverage-aware audit report, native loading, stateful relay, managed-policy
 enforcement or OS confinement. Scoring used a minimal environment, not an OS
 network sandbox. No other guard was remeasured.

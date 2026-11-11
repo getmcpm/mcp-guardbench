@@ -591,8 +591,8 @@ remain. [Scoreboard, verdicts, lock and reproduction receipt](results/mcpm-0.53.
 bind npm SRI/SHA256, authenticated release source, all 136 installed archive files,
 the complete installed runtime tree, unchanged adapter/runner and corpus commit
 `ba18d3deb4e4836920735a6fd97ca96ad836679e`. The corpus and expected actions did
-not change. This stateless measurement does not exercise 0.53.0's policy-init
-host inventory, native loading, stateful relay, managed-policy enforcement or OS
+not change. This stateless measurement does not exercise 0.53.0's coverage-aware
+audit report, native loading, stateful relay, managed-policy enforcement or OS
 confinement.
 
 ## Corpus

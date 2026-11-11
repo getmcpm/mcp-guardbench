@@ -1,0 +1,52 @@
+{
+  "note": "Snapshots of release-manager and Astra verification outcomes, not a standalone signed attestation. Benchmark independently checked archive SHA256/SRI and all installed package files.",
+  "parent": {
+    "status": "verified",
+    "version": "0.53.0",
+    "source": "476209d681a3482a864db6534f4eda4150aa59b0",
+    "archiveSha256": "8f254bb89636bf52f69d9acf0f660c616483ddfcec45aa09eb497850771e393f",
+    "integrity": "sha512-ZHcP5+/5r4q1yFyb0/jYoCdEN2qWGI2NXmuKVIC8D4tlTpFIu5Xg1mKAZVhZXIjytBvBhULydn8OUw+D3FDRSA==",
+    "runtimeFiles": 66,
+    "independentVersionedBuildMatches": true,
+    "signerSan": "https://github.com/getmcpm/cli/.github/workflows/publish.yml@refs/tags/v0.53.0",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "wrongArchiveRejected": true,
+    "sbomSha256": "c24a6726c5eb2470c98091048a57b0bc202b3b59e122f67547695817daa30415",
+    "sbomTamperRejected": true,
+    "scope": "Build/artifact identity; not code safety or exhaustive SBOM coverage"
+  },
+  "astra": {
+    "status": "verified",
+    "version": "0.53.0",
+    "expectedCommit": "476209d681a3482a864db6534f4eda4150aa59b0",
+    "archive": {
+      "bytes": 755629,
+      "sha256": "8f254bb89636bf52f69d9acf0f660c616483ddfcec45aa09eb497850771e393f",
+      "integrity": "sha512-ZHcP5+/5r4q1yFyb0/jYoCdEN2qWGI2NXmuKVIC8D4tlTpFIu5Xg1mKAZVhZXIjytBvBhULydn8OUw+D3FDRSA=="
+    },
+    "trustedRootSha256": "6494e21ea73fa7ee769f85f57d5a3e6a08725eae1e38c755fc3517c9e6bc0b66",
+    "provenance": {
+      "signerSan": "https://github.com/getmcpm/cli/.github/workflows/publish.yml@refs/tags/v0.53.0",
+      "signerIssuer": "https://token.actions.githubusercontent.com",
+      "subject": {
+        "name": "pkg:npm/%40getmcpm/cli@0.53.0",
+        "digest": {
+          "sha512": "64770fe7eff9af8ab5c85c9bd3f8d8a02744376a96188d8d5e6b8a5480bc0f8b654e9148bb95e0d662806558595c88f2b41bc18542f2767f0e530f83dc50d148"
+        }
+      },
+      "sourceCommit": "476209d681a3482a864db6534f4eda4150aa59b0",
+      "alteredPayloadRejected": true
+    },
+    "sbom": {
+      "sha256": "c24a6726c5eb2470c98091048a57b0bc202b3b59e122f67547695817daa30415",
+      "signerSan": "https://github.com/getmcpm/cli/.github/workflows/publish.yml@refs/tags/v0.53.0",
+      "signerIssuer": "https://token.actions.githubusercontent.com",
+      "alteredBytesRejected": true
+    },
+    "limitation": "Offline cryptographic build/artifact identity verification, not code safety, runtime compatibility or exhaustive SBOM coverage"
+  },
+  "sourceProofSHA256": {
+    "parent-crypto-build-proof.json": "88585899bb9e6a6b2c36aa258bbd3642fbe8e1313fc44e87755baaf66c010559",
+    "astra-crypto-proof.json": "d9f567e2a0605f616d2939ebd2f011028d7d42bd3a509957a00f2288ede742f6"
+  }
+}

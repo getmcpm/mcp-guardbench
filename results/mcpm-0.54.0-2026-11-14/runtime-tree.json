@@ -1,6 +1,6 @@
 {
   "root": "node_modules",
-  "algorithm": "SHA256 of UTF-8 NDJSON entries, sorted by relative path; compact JSON keys ordered path,bytes,sha256 for regular files or path,symlink for symbolic links; one trailing newline per entry",
+  "algorithm": "SHA256 of UTF-8 NDJSON entries, sorted lexicographically by relative POSIX path components (Python pathlib order); compact JSON keys ordered path,bytes,sha256 for regular files or path,symlink for symbolic links; one trailing newline per entry",
   "entries": 4848,
   "files": 4844,
   "symlinks": 4,

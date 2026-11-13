@@ -609,7 +609,7 @@ The same five misses and all historical rows remain.
 bind npm SRI/SHA256, authenticated release source, all 136 installed archive files,
 the complete installed runtime tree, unchanged adapter/runner and corpus commit
 `ba18d3deb4e4836920735a6fd97ca96ad836679e`. The corpus and expected actions did
-not change. 0.54.0 adds `mcpm mcp audit report` without changing the guard detector.
+not change. 0.54.0 adds the `mcpm_audit_report` MCP tool without changing the guard detector.
 This stateless measurement does not exercise that report, native loading, stateful
 relay, managed-policy enforcement or OS confinement. No other guard was remeasured.
 

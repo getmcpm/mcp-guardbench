@@ -74,7 +74,7 @@ The raw replay uses the same runner bucket/file order (`attacks`, `benign`,
 `warn`) and `{id,message}` NDJSON through `adapters/mcpm/adapter.mjs`. Its input
 SHA256 is recorded in the receipt. Keep payloads out of model prompts.
 
-0.54.0 adds `mcpm mcp audit report`; it does not change the guard detector.
+0.54.0 adds the `mcpm_audit_report` MCP tool; it does not change the guard detector.
 
 This is stateless single-frame `guard inspect` evidence. It does not exercise
 0.54.0's MCP audit report, native loading, stateful relay, managed-policy

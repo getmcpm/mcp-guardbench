@@ -1,0 +1,75 @@
+{
+  "package": "@getmcpm/cli",
+  "version": "0.54.0",
+  "measuredAtUTC": "2026-11-13T16:06:38.991Z",
+  "measurementDateUTC": "2026-11-13",
+  "reportDate": "2026-11-14",
+  "reportTimezone": "Asia/Hong_Kong",
+  "runtime": {
+    "node": "v26.11.1",
+    "nodeSHA256": "72661776a737f5bbd7bc66af9dc5a5ef324819a53df518fdc7143127927c1378",
+    "npm": "11.20.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "command": "env -i PATH=/Users/mingshum/.nvm/versions/node/v26.11.1/bin:/usr/bin:/bin HOME=/private/tmp/mcpm-guardbench-0540-runtime-20261113/home MCPM_CMD='node /private/tmp/mcpm-guardbench-0540-runtime-20261113/node_modules/@getmcpm/cli/dist/index.js guard inspect --json' node runner/run.mjs --adapter 'node adapters/mcpm/adapter.mjs' --name mcpm@0.54.0",
+  "install": {
+    "spec": "file:cli-0.54.0.tgz",
+    "command": "npm install --ignore-scripts --no-audit --no-fund",
+    "state": "fresh dedicated runtime, disposable HOME/cache, explicit empty npm user/global configs, lifecycle scripts disabled"
+  },
+  "environment": {
+    "HOME": "disposable isolated home",
+    "processEnvironment": "env -i with PATH/HOME/MCPM_CMD only; no inherited provider credentials; scoring not OS-network-sandboxed",
+    "clientConfigurationScope": "disposable HOME; no real client paths supplied"
+  },
+  "sourceTag": "v0.54.0",
+  "sourceCommit": "88bfb58013e639acfbf73081913b2c70ca8c9c56",
+  "sourceIdentityEvidence": "Release-manager and Astra authenticated SLSA/SBOM outcomes copied in published-proof.json; benchmark independently rechecked archive SHA256/SRI and all 136 installed package files",
+  "npmIntegrity": "sha512-QUfRWp73iiNXYSzX5i/QFS/DVVqO7U3fqYlXVl5c3S2NWma72YwOhZZ+Cz0BC9DBMmhUbY2a2MfM9T6DtF569w==",
+  "npmTarball": "https://registry.npmjs.org/@getmcpm/cli/-/cli-0.54.0.tgz",
+  "npmAttestations": "https://registry.npmjs.org/-/npm/v1/attestations/@getmcpm%2fcli@0.54.0",
+  "archiveSHA256": "3e85d1df5c478a196161f3a0a1a4827e9fa999aecf62adece9c5ac03e4ca20dd",
+  "installedArchiveFilesMatched": 136,
+  "installedArchiveManifest": "installed-archive-manifest.json",
+  "runtimeTree": "runtime-tree.json",
+  "runtimeTreeScope": "All 4844 regular files and four symlink targets under the installed node_modules, including dependencies and npm hidden lock; deterministic path/content digest, no host state",
+  "installLock": "install-lock.json",
+  "installLockSHA256": "969df48ebb2b2204cc72f98b5080aef8e5384e774dcb4cb45054709e1648ec34",
+  "corpusVersion": "v5",
+  "corpusCommit": "ba18d3deb4e4836920735a6fd97ca96ad836679e",
+  "corpusTree": "e81d3900c4b24d6472bd472d9088e4899e8ccd94",
+  "repositoryBaseCommit": "34dd0440ec24160df920ae43f873af61e2cc51f4",
+  "adapterSource": "adapters/mcpm/adapter.mjs",
+  "adapterSHA256": "c68f0a704ba16b271da4b6dd45815e39d22c5881c438286e95f580c0e778f2f3",
+  "runnerSHA256": "5ddcfa2ecb368515efe4d2d85257e730142566efc2d56cd0387da7537f5dd6c4",
+  "corpusChanged": false,
+  "inputSHA256": "d279b09abc2f8ec85198268ae2da09d9b121bcb0eb3dc26db143476736487084",
+  "verdictsSHA256": "66c8fbfc71cac4318635264642319f8ec6c3f4ed538bdf10177fd51bd68cdf40",
+  "comparison": "All 57 separate adapter replay verdicts byte-identical to retained published 0.53.0 measurement; independently recalculated replay confusion/metrics match official runner",
+  "verdictCapture": "Separate replay through unchanged public CLI adapter after official runner; not intercepted runner stdout",
+  "replayReconciliation": {
+    "cases": 57,
+    "confusion": {
+      "TP": 32,
+      "FN": 5,
+      "FP": 0,
+      "TN": 20
+    },
+    "exactActions": 50
+  },
+  "adapterContractTests": {
+    "passed": 14,
+    "failed": 0
+  },
+  "scope": "Stateless single-frame guard inspect only; no 0.54.0 MCP audit report/native client/relay/managed-policy enforcement or OS confinement proof; no other guards remeasured",
+  "artifactsSHA256": {
+    "install-lock.json": "969df48ebb2b2204cc72f98b5080aef8e5384e774dcb4cb45054709e1648ec34",
+    "installed-archive-manifest.json": "1c28c75a5be8f6e83894741013446808b113722fb1c7f4c9d961475f67aa643f",
+    "published-proof.json": "05e91a2a3ca2e4dd42e91e5b256d83cf4c559499824a876394b91d82897210e4",
+    "runtime-tree.json": "041623ca285485827a02ca1d7b3c2c428606419a23ed280697bd32cf99768708",
+    "scoreboard.json": "a4a0893a3fbd332b6c8689f9be122f5018ba8f849ea91ba9c3c5d6327eddbe24",
+    "scoreboard.md": "1fd3f1b267d7e102958fc9a977a6915d523db3018b608d332362adbcdbcd045a",
+    "verdicts-0.54.0.ndjson": "66c8fbfc71cac4318635264642319f8ec6c3f4ed538bdf10177fd51bd68cdf40"
+  }
+}

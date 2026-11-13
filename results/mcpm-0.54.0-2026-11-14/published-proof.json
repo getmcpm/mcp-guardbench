@@ -1,0 +1,61 @@
+{
+  "note": "Snapshot of release-manager and Astra verification outcomes, not a standalone signed attestation. Benchmark independently checked archive SHA256/SRI and every installed package file.",
+  "parent": {
+    "status": "verified",
+    "version": "0.54.0",
+    "source": "88bfb58013e639acfbf73081913b2c70ca8c9c56",
+    "archiveSha256": "3e85d1df5c478a196161f3a0a1a4827e9fa999aecf62adece9c5ac03e4ca20dd",
+    "integrity": "sha512-QUfRWp73iiNXYSzX5i/QFS/DVVqO7U3fqYlXVl5c3S2NWma72YwOhZZ+Cz0BC9DBMmhUbY2a2MfM9T6DtF569w==",
+    "runtimeFiles": 66,
+    "independentVersionedBuildMatches": true,
+    "signerSan": "https://github.com/getmcpm/cli/.github/workflows/publish.yml@refs/tags/v0.54.0",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "wrongArchiveRejected": true,
+    "sbomSha256": "83e28b57de159835dc45da5d6a1972bb9a8df3467cce7e9fd66d3541c849f1e2",
+    "sbomTamperRejected": true,
+    "scope": "Build/artifact identity; not code safety or exhaustive SBOM coverage"
+  },
+  "sourceProofSHA256": {
+    "parent-crypto-build-proof.json": "dba24bc1d91ea13b8f4144f5c2eaee9ba30219783b17094e51f07b9a3f8d99ff",
+    "astra-crypto-proof.json": "f453c9b03801c65146e07d9dd90045915300a36825821af4ce1a300589753800",
+    "astra-runtime-binding.json": "8b95b8fd9c36cef5f00b07d482e3d99ac8ae8973a7b7bda933d94569d9244ff0"
+  },
+  "astra": {
+    "status": "verified",
+    "version": "0.54.0",
+    "expectedCommit": "88bfb58013e639acfbf73081913b2c70ca8c9c56",
+    "archive": {
+      "bytes": 757442,
+      "sha256": "3e85d1df5c478a196161f3a0a1a4827e9fa999aecf62adece9c5ac03e4ca20dd",
+      "integrity": "sha512-QUfRWp73iiNXYSzX5i/QFS/DVVqO7U3fqYlXVl5c3S2NWma72YwOhZZ+Cz0BC9DBMmhUbY2a2MfM9T6DtF569w=="
+    },
+    "trustedRootSha256": "6494e21ea73fa7ee769f85f57d5a3e6a08725eae1e38c755fc3517c9e6bc0b66",
+    "provenance": {
+      "signerSan": "https://github.com/getmcpm/cli/.github/workflows/publish.yml@refs/tags/v0.54.0",
+      "signerIssuer": "https://token.actions.githubusercontent.com",
+      "subject": {
+        "name": "pkg:npm/%40getmcpm/cli@0.54.0",
+        "digest": {
+          "sha512": "4147d15a9ef78a2357612cd7e62fd0152fc3555a8eed4ddfa98957565e5cdd2d8d5a66bbd98c0e85967e0b3d010bd0c13268546d8d9ad8c7ccf53e83b45e7af7"
+        }
+      },
+      "sourceCommit": "88bfb58013e639acfbf73081913b2c70ca8c9c56",
+      "alteredPayloadRejected": true
+    },
+    "sbom": {
+      "sha256": "83e28b57de159835dc45da5d6a1972bb9a8df3467cce7e9fd66d3541c849f1e2",
+      "signerSan": "https://github.com/getmcpm/cli/.github/workflows/publish.yml@refs/tags/v0.54.0",
+      "signerIssuer": "https://token.actions.githubusercontent.com",
+      "alteredBytesRejected": true
+    },
+    "limitation": "Offline cryptographic build/artifact identity verification, not code safety, runtime compatibility or exhaustive SBOM coverage"
+  },
+  "astraRuntimeBinding": {
+    "result": "verified",
+    "source": "88bfb58013e639acfbf73081913b2c70ca8c9c56",
+    "sourceTree": "ce3e185e69ef884534977d798157351e7cd433a2",
+    "archiveSha256": "3e85d1df5c478a196161f3a0a1a4827e9fa999aecf62adece9c5ac03e4ca20dd",
+    "installedJavaScriptFilesIndependentlyMatched": 66,
+    "scope": "Independent archive/source-versioned-build binding plus retained public metadata; not runtime safety or independent live fetch"
+  }
+}

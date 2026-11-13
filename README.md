@@ -82,6 +82,7 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage | corpus |
 |---|---|---|---|---|---|---|
+| `@getmcpm/cli@0.54.0` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.53.0` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.52.0` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.51.0` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
@@ -111,12 +112,13 @@ low score.**
 | *naive baseline (substring match)* | 38.2% | 30.0% | 68.4% | 40.7% | 54/54 | v4 |
 
 mcpm rows use the published `guard inspect --json` CLI: historically through
-`npx @getmcpm/cli@<version>`, and 0.50.1/0.51.0/0.53.0 through verified archive installs;
+`npx @getmcpm/cli@<version>`, and 0.50.1/0.51.0/0.53.0/0.54.0 through verified archive installs;
 0.52.0 uses an exact-version npm install reconciled against the authenticated
 archive (exact commands in the receipts). The Cisco row
 through `mcp-scanner static`; the McpVanguard rows through `vanguard benchmark-run
---json-output --profile strict`. Every guard is driven by its own published CLI. The eighteen v5
-rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.53.0` on
+--json-output --profile strict`. Every guard is driven by its own published CLI. The nineteen v5
+rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.54.0` on
+2026-11-14 (Hong Kong), `@getmcpm/cli@0.53.0` on
 2026-11-11 (Hong Kong), `@getmcpm/cli@0.52.0` on
 2026-11-08 (Hong Kong), `@getmcpm/cli@0.51.0`, `@getmcpm/cli@0.50.1` and
 `@getmcpm/cli@0.50.0` on 2026-11-06 (Hong Kong),
@@ -126,7 +128,7 @@ rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.53.0` on
 `@getmcpm/cli@0.42.5` on 2026-09-29,
 `@getmcpm/cli@0.42.4` on 2026-09-28, `@getmcpm/cli@0.42.3` on 2026-09-26,
 `@getmcpm/cli@0.42.2` on 2026-09-25, `@getmcpm/cli@0.42.1` on 2026-09-24 and
-`@getmcpm/cli@0.42.0` on 2026-09-20 are the fourteen measured on the current 57-case corpus (the last after
+`@getmcpm/cli@0.42.0` on 2026-09-20 are the fifteen measured on the current 57-case corpus (the last after
 [`deadbugz-supply-chain-mongodb-tool-poisoning`](#corpus-v5---the-first-live-in-the-wild-campaign-case-deadbugz)
 was contributed); `@getmcpm/cli@0.42.0`'s prior 56-case measurement from 2026-09-19 is kept
 as a history row rather than overwritten, alongside `@getmcpm/cli@0.38.0` (2026-09-08) and
@@ -594,6 +596,22 @@ the complete installed runtime tree, unchanged adapter/runner and corpus commit
 not change. This stateless measurement does not exercise 0.53.0's coverage-aware
 audit report, native loading, stateful relay, managed-policy enforcement or OS
 confinement.
+
+**Update, measured 2026-11-14 (Hong Kong) against `@getmcpm/cli@0.54.0`, 57-case corpus**
+(the unchanged adapter invokes the authenticated published archive's installed
+public `guard inspect --json` CLI): recall **86.5%** (32/37), fp-rate 0.0%,
+precision 100.0%, exact-action 87.7% (50/57), 57/57 scored, no unsupported cases,
+adapter errors, anomalies or over-blocked warn cases. A separate adapter replay
+produces all 57 verdicts byte-identical to the retained published `0.53.0` result;
+independently recalculated replay confusion and metrics match the official runner.
+The same five misses and all historical rows remain.
+[Scoreboard, verdicts, lock and reproduction receipt](results/mcpm-0.54.0-2026-11-14/)
+bind npm SRI/SHA256, authenticated release source, all 136 installed archive files,
+the complete installed runtime tree, unchanged adapter/runner and corpus commit
+`ba18d3deb4e4836920735a6fd97ca96ad836679e`. The corpus and expected actions did
+not change. 0.54.0 adds `mcpm mcp audit report` without changing the guard detector.
+This stateless measurement does not exercise that report, native loading, stateful
+relay, managed-policy enforcement or OS confinement. No other guard was remeasured.
 
 ## Corpus
 

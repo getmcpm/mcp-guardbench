@@ -1,0 +1,12 @@
+{
+  "source": "cfcbbe6e19afb98d984a285ebf361cccb471104c",
+  "identity": "https://github.com/getmcpm/cli/.github/workflows/publish.yml@refs/tags/v0.54.2",
+  "issuer": "https://token.actions.githubusercontent.com",
+  "sri": "sha512-8nO+q27PfIs3gT+Gp5ENVaGdohFhMIYuZUXjbXXvoL2/2rdTKL3X2OkkM+LhehITwHntBCI5rIGCPMafHR3StQ==",
+  "archiveBytes": 758131,
+  "archiveSha256": "1e55676a7fc73918531b3c9185271485aa74dede501dbf6c91c02494b2b0e981",
+  "sbomSha256": "1e572e9b0d3cb3cf3d9fa12855f56a624a8fccdb47ed8809c62cef9e3dd664b5",
+  "slsaVerified": true,
+  "sbomVerified": true,
+  "tamperRejected": true
+}

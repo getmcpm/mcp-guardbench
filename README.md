@@ -82,6 +82,7 @@ low score.**
 
 | guard | recall | fp-rate | precision | exact-action | coverage | corpus |
 |---|---|---|---|---|---|---|
+| `@getmcpm/cli@0.54.4` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.54.2` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.54.1` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
 | `@getmcpm/cli@0.54.0` | 86.5% | 0.0% | 100.0% | 87.7% | 57/57 | v5 |
@@ -114,12 +115,13 @@ low score.**
 | *naive baseline (substring match)* | 38.2% | 30.0% | 68.4% | 40.7% | 54/54 | v4 |
 
 mcpm rows use the published `guard inspect --json` CLI: historically through
-`npx @getmcpm/cli@<version>`, and 0.50.1/0.51.0/0.53.0/0.54.0/0.54.1/0.54.2 through verified archive installs;
+`npx @getmcpm/cli@<version>`, and 0.50.1/0.51.0/0.53.0/0.54.0/0.54.1/0.54.2/0.54.4 through verified archive installs;
 0.52.0 uses an exact-version npm install reconciled against the authenticated
 archive (exact commands in the receipts). The Cisco row
 through `mcp-scanner static`; the McpVanguard rows through `vanguard benchmark-run
---json-output --profile strict`. Every guard is driven by its own published CLI. The twenty-one v5
-rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.54.2` on
+--json-output --profile strict`. Every guard is driven by its own published CLI. The twenty-two v5
+rows are the only ones measured on the v5 corpus: `@getmcpm/cli@0.54.4` on
+2026-11-20 (Hong Kong), `@getmcpm/cli@0.54.2` on
 2026-11-20 (Hong Kong), `@getmcpm/cli@0.54.1` on
 2026-11-20 (Hong Kong), `@getmcpm/cli@0.54.0` on
 2026-11-14 (Hong Kong), `@getmcpm/cli@0.53.0` on
